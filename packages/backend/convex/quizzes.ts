@@ -252,3 +252,151 @@ export const updateQuizConfig = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Join a quiz as a player (anonymous)
+ */
+export const joinQuiz = mutation({
+  args: {
+    joinCode: v.string(),
+    name: v.string(),
+    deviceFingerprint: v.string(),
+  },
+  handler: async (ctx, { joinCode, name, deviceFingerprint }) => {
+    // Find quiz by join code
+    const quiz = await ctx.db
+      .query("quizzes")
+      .withIndex("byJoinCode", (q) => q.eq("joinCode", joinCode))
+      .unique();
+
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    // Verify quiz is in lobby phase (can only join in lobby)
+    if (quiz.phase !== "lobby") {
+      throw new Error("Quiz has already started or finished");
+    }
+
+    // Validate name
+    if (!name.trim() || name.length > 20) {
+      throw new Error("Name must be 1-20 characters");
+    }
+
+    // Check for duplicate name in this quiz
+    const existingPlayerWithName = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quiz._id))
+      .filter((q) => q.eq(q.field("name"), name.trim()))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .first();
+
+    if (existingPlayerWithName) {
+      throw new Error("Name already taken in this quiz");
+    }
+
+    // Check if device fingerprint already has a player in this quiz
+    const existingPlayerWithFingerprint = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quiz._id))
+      .filter((q) => q.eq(q.field("deviceFingerprint"), deviceFingerprint))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .first();
+
+    if (existingPlayerWithFingerprint) {
+      throw new Error("Device already has a player in this quiz");
+    }
+
+    // Check player capacity (max 50)
+    const playerCount = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quiz._id))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    if (playerCount.length >= 50) {
+      throw new Error("Quiz is full (maximum 50 players)");
+    }
+
+    const now = Date.now();
+
+    // Create player record
+    const playerId = await ctx.db.insert("players", {
+      quizId: quiz._id,
+      name: name.trim(),
+      deviceFingerprint,
+      isHost: false,
+      score: 0,
+      connectedAt: now,
+      lastSeenAt: now,
+    });
+
+    return { playerId, quizId: quiz._id };
+  },
+});
+
+/**
+ * Start the game - transition from lobby to prompting phase
+ * Host-only mutation
+ */
+export const startGame = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+  },
+  handler: async (ctx, { quizId }) => {
+    // Verify user is authenticated
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User must be authenticated to start game");
+    }
+
+    // Get quiz and verify ownership
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.authorId !== identity.subject) {
+      throw new Error("Only quiz author can start the game");
+    }
+
+    // Verify quiz is in lobby phase
+    if (quiz.phase !== "lobby") {
+      throw new Error("Game can only be started from lobby phase");
+    }
+
+    // Get all non-host players
+    const players = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    if (players.length === 0) {
+      throw new Error("At least one player must join before starting");
+    }
+
+    // Select random prompter from available players
+    const randomPrompter = players[Math.floor(Math.random() * players.length)];
+
+    const now = Date.now();
+    const promptDeadlineAt = now + quiz.config.secondsForPrompt * 1000;
+
+    // Create first round
+    await ctx.db.insert("rounds", {
+      quizId,
+      roundIndex: 0,
+      prompterPlayerId: randomPrompter._id,
+    });
+
+    // Update quiz phase and deadline
+    await ctx.db.patch(quizId, {
+      phase: "prompting",
+      promptDeadlineAt,
+      updatedAt: now,
+    });
+
+    return { success: true };
+  },
+});

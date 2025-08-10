@@ -1,3 +1,5 @@
+import { JoinQuizForm } from "../../components/join-quiz-form";
+
 // Anonymous route - no auth required
 export default function JoinPage() {
   return (
@@ -9,14 +11,7 @@ export default function JoinPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Join form will be implemented in Milestone 4 */}
-        <div className="rounded-lg border border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground">
-            Join form coming in Milestone 4...
-          </p>
-        </div>
-      </div>
+      <JoinQuizForm />
     </div>
   );
 }

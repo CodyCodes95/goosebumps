@@ -1,3 +1,5 @@
+import { JoinWithCodeForm } from "../../../components/join-with-code-form";
+
 // Anonymous route - no auth required for players
 type JoinCodePageProps = {
   params: Promise<{
@@ -17,14 +19,7 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Name entry form will be implemented in Milestone 4 */}
-        <div className="rounded-lg border border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground">
-            Name entry form coming in Milestone 4...
-          </p>
-        </div>
-      </div>
+      <JoinWithCodeForm joinCode={joinCode} />
     </div>
   );
 }

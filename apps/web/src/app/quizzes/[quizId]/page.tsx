@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import QuizDetail from "@/components/quiz-detail";
-import type { Id } from "../../../../../packages/backend/convex/_generated/dataModel";
+import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 
 type QuizDetailPageProps = {
   params: Promise<{
