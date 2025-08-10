@@ -23,7 +23,9 @@ export default function Home() {
               size="lg"
               className="text-lg px-8 py-6 transition-transform hover:scale-105 hover:shadow-lg"
             >
-              <Link href="/quizzes">Create Quiz</Link>
+              <Link prefetch={true} href="/quizzes">
+                Create Quiz
+              </Link>
             </Button>
             <Button
               asChild
@@ -31,7 +33,9 @@ export default function Home() {
               size="lg"
               className="text-lg px-8 py-6 transition-transform hover:scale-105 hover:shadow-md"
             >
-              <Link href="/join">Join Game</Link>
+              <Link prefetch={true} href="/join">
+                Join Game
+              </Link>
             </Button>
           </div>
         </div>

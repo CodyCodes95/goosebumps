@@ -54,7 +54,7 @@ export function UserMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" align="end">
           <DropdownMenuItem asChild>
-            <Link href="/join">
+            <Link prefetch={true} href="/join">
               <Users className="h-4 w-4" />
               Join Game
             </Link>
@@ -129,13 +129,13 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/join">
+            <Link prefetch={true} href="/join">
               <Users className="h-4 w-4" />
               Join Game
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/quizzes">
+            <Link prefetch={true} href="/quizzes">
               <Plus className="h-4 w-4" />
               My Quizzes
             </Link>
