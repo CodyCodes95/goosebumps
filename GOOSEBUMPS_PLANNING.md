@@ -344,9 +344,9 @@ Milestone 6 – Answering & Reveal (Day 6–7)
 - [x] Styling & interaction review for `/play/[quizId]` answering & reveal: countdown animation polish, answer selection feedback, reveal transitions.
 
 Milestone 7 – Scoreboard & Next Rounds (Day 7–8)
-- [ ] Leaderboard query; scoreboard UI.
-- [ ] Transition `scoreboard -> prompting` (next prompter); or `finished`.
-- [ ] Styling & interaction review for scoreboard: list entrance/exit animations, responsive layout, readable typography, color contrast.
+- [x] Leaderboard query; scoreboard UI.
+- [x] Transition `scoreboard -> prompting` (next prompter); or `finished`.
+- [x] Styling & interaction review for scoreboard: list entrance/exit animations, responsive layout, readable typography, color contrast.
 
 Milestone 8 – Polish & Edge Cases (Day 8–10)
 - [ ] Kicking players; rejoin handling; network resilience.
