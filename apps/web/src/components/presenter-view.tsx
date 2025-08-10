@@ -5,7 +5,7 @@ import { api, type Id } from "@goosebumps/backend";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import Loader from "./loader";
+import Loader, { LoaderContainer } from "./loader";
 import { Copy, Play, Users, Clock, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -31,7 +31,7 @@ export function PresenterView({ quizId }: PresenterViewProps) {
   const startGame = useMutation(api.quizzes.startGame);
 
   if (quiz === undefined || liveData === undefined) {
-    return <Loader />;
+    return <LoaderContainer />;
   }
 
   if (!quiz) {

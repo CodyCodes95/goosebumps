@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api, type Id } from "@goosebumps/backend";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import Loader from "./loader";
+import { LoaderContainer } from "./loader";
 import { Users, Clock, Play, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -38,9 +38,7 @@ export function PlayerView({ quizId }: PlayerViewProps) {
   if (quiz === undefined || liveData === undefined || !deviceFingerprint) {
     return (
       <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <Loader />
-        </div>
+        <LoaderContainer />
       </div>
     );
   }

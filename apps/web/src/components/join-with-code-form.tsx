@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import Loader from "./loader";
+import Loader, { LoaderContainer } from "./loader";
 import { toast } from "sonner";
 import { Users, Clock } from "lucide-react";
 
@@ -92,9 +92,7 @@ export function JoinWithCodeForm({ joinCode }: JoinWithCodeFormProps) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <Loader />
-          </div>
+          <LoaderContainer />
         </CardContent>
       </Card>
     );
