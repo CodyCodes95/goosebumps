@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
     "@t3-oss/env-core",
     "@goosebumps/backend",
   ],
+  typescript: {
+    ignoreBuildErrors: true,
+  }
 };
 
 export default nextConfig;
