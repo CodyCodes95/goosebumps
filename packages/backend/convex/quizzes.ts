@@ -7,7 +7,8 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateText } from "ai";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -516,6 +517,16 @@ export const submitPrompt = mutation({
  * Generate AI answers using Gemini
  * Internal action called after prompt submission
  */
+// Define Zod schema for trivia question structure
+const triviaQuestionSchema = z.object({
+  question: z.string().describe("The trivia question"),
+  correct: z.string().describe("The correct answer"),
+  distractors: z
+    .array(z.string())
+    .length(3)
+    .describe("Three incorrect but plausible answers"),
+});
+
 export const generateAiAnswers = internalAction({
   args: {
     quizId: v.id("quizzes"),
@@ -524,59 +535,26 @@ export const generateAiAnswers = internalAction({
   },
   handler: async (ctx, { quizId, roundId, promptText }) => {
     try {
-      // Construct the prompt for AI to generate a question with 4 options
-      const systemPrompt = `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
-
-Rules:
-- Generate factually accurate questions
-- Make distractors plausible but clearly wrong
-- Keep questions and answers concise
-- Avoid controversial topics
-- Return response in exact JSON format specified`;
-
-      const userPrompt = `Create a trivia question based on this prompt: "${promptText}"
-
-Return your response in this exact JSON format:
-{
-  "question": "Your trivia question here",
-  "correct": "The correct answer",
-  "distractors": ["Wrong answer 1", "Wrong answer 2", "Wrong answer 3"]
-}`;
-
       // Create Google provider with API key
       const google = createGoogleGenerativeAI({
         apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
       });
 
-      // Call Gemini API
-      const { text } = await generateText({
+      // Call Gemini API with structured output
+      const { object: aiResponse } = await generateObject({
         model: google("gemini-2.0-flash"),
-        system: systemPrompt,
-        prompt: userPrompt,
+        system: `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
+
+Rules:
+- Generate factually accurate questions
+- Make distractors plausible but clearly wrong
+- Keep questions and answers concise
+- Avoid controversial topics`,
+        prompt: `Create a trivia question based on this prompt: "${promptText}"`,
+        schema: triviaQuestionSchema,
         temperature: 0.7,
         maxOutputTokens: 500,
-        tools: {
-          google_search: google.tools.googleSearch({}),
-        },
       });
-
-      // Parse the AI response
-      let aiResponse;
-      try {
-        aiResponse = JSON.parse(text.trim());
-      } catch {
-        throw new Error("AI response was not valid JSON");
-      }
-
-      // Validate response structure
-      if (
-        !aiResponse.question ||
-        !aiResponse.correct ||
-        !Array.isArray(aiResponse.distractors) ||
-        aiResponse.distractors.length !== 3
-      ) {
-        throw new Error("AI response missing required fields");
-      }
 
       // Create shuffled options with unique IDs
       const allOptions = [
@@ -653,6 +631,119 @@ export const advanceToAnswering = internalMutation({
       answerDeadlineAt,
       updatedAt: now,
     });
+  },
+});
+
+/**
+ * Submit answer during answering phase
+ * Players submit their selected option
+ */
+export const submitAnswer = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+    selectedOptionId: v.string(),
+    deviceFingerprint: v.string(),
+  },
+  handler: async (
+    ctx,
+    { quizId, roundId, selectedOptionId, deviceFingerprint }
+  ) => {
+    // Get quiz and verify state
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.phase !== "answering") {
+      throw new Error("Not in answering phase");
+    }
+
+    // Get round and verify it exists
+    const round = await ctx.db.get(roundId);
+    if (!round || round.quizId !== quizId) {
+      throw new Error("Round not found or doesn't belong to this quiz");
+    }
+
+    if (round.roundIndex !== quiz.currentRoundIndex) {
+      throw new Error("Round is not the current active round");
+    }
+
+    // Verify the selected option exists
+    if (!round.aiAnswerOptions) {
+      throw new Error("No answer options available for this round");
+    }
+
+    const selectedOption = round.aiAnswerOptions.find(
+      (option) => option.id === selectedOptionId
+    );
+    if (!selectedOption) {
+      throw new Error("Invalid answer option selected");
+    }
+
+    // Find player by device fingerprint
+    const player = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("deviceFingerprint"), deviceFingerprint))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .unique();
+
+    if (!player) {
+      throw new Error("Player not found in this quiz");
+    }
+
+    // Check if player has already answered this round
+    const existingAnswer = await ctx.db
+      .query("playerAnswers")
+      .withIndex("byPlayerAndRound", (q) =>
+        q.eq("playerId", player._id).eq("roundId", roundId)
+      )
+      .unique();
+
+    if (existingAnswer) {
+      throw new Error("You have already answered this round");
+    }
+
+    const now = Date.now();
+
+    // Calculate scoring based on correctness and speed
+    let points = 0;
+    if (selectedOption.isCorrect) {
+      // Base points for correct answer
+      points = 100;
+
+      // Speed bonus - up to 50% more points based on how quickly answered
+      if (quiz.answerDeadlineAt) {
+        const totalTimeMs = quiz.config.secondsPerQuestion * 1000;
+        const timeRemainingMs = quiz.answerDeadlineAt - now;
+        const speedBonus = Math.floor((timeRemainingMs / totalTimeMs) * 50);
+        points += Math.max(0, speedBonus);
+      }
+    }
+
+    // Record player answer
+    await ctx.db.insert("playerAnswers", {
+      quizId,
+      roundId,
+      playerId: player._id,
+      selectedOptionId,
+      isCorrect: selectedOption.isCorrect,
+      submittedAt: now,
+    });
+
+    // Update player score
+    await ctx.db.patch(player._id, {
+      score: player.score + points,
+      lastSeenAt: now,
+    });
+
+    return {
+      success: true,
+      isCorrect: selectedOption.isCorrect,
+      pointsEarned: points,
+    };
   },
 });
 

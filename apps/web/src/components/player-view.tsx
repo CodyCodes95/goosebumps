@@ -33,14 +33,34 @@ export function PlayerView({ quizId }: PlayerViewProps) {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [promptText, setPromptText] = useState("");
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(false);
 
   // Set device fingerprint on client side
   useEffect(() => {
     setDeviceFingerprint(getDeviceFingerprint());
   }, []);
 
+  // Get public quiz data by ID first to get the join code
+  const quiz = useQuery(api.quizzes.getQuizPublic, {
+    quizId: quizId as Id<"quizzes">,
+  });
+
+  // Get live quiz data with players
+  const liveData = useQuery(api.quizzes.getQuizLive, {
+    joinCode: quiz?.joinCode || "",
+  });
+
+  // Reset answer state when round changes
+  useEffect(() => {
+    setSelectedAnswer("");
+    setHasAnswered(false);
+  }, [liveData?.currentRound?._id]);
+
   // Mutations
   const submitPrompt = useMutation(api.quizzes.submitPrompt);
+  const submitAnswer = useMutation(api.quizzes.submitAnswer);
 
   // Handle prompt submission
   const handleSubmitPrompt = async () => {
@@ -77,15 +97,38 @@ export function PlayerView({ quizId }: PlayerViewProps) {
     }
   };
 
-  // Get public quiz data by ID first to get the join code
-  const quiz = useQuery(api.quizzes.getQuizPublic, {
-    quizId: quizId as Id<"quizzes">,
-  });
+  // Handle answer submission
+  const handleSubmitAnswer = async (optionId: string) => {
+    if (!liveData?.currentRound || isSubmittingAnswer || hasAnswered) {
+      return;
+    }
 
-  // Get live quiz data with players
-  const liveData = useQuery(api.quizzes.getQuizLive, {
-    joinCode: quiz?.joinCode || "",
-  });
+    setIsSubmittingAnswer(true);
+    try {
+      const result = await submitAnswer({
+        quizId: liveData.quiz._id,
+        roundId: liveData.currentRound._id,
+        selectedOptionId: optionId,
+        deviceFingerprint,
+      });
+
+      setSelectedAnswer(optionId);
+      setHasAnswered(true);
+
+      if (result.isCorrect) {
+        toast.success(`Correct! +${result.pointsEarned} points`);
+      } else {
+        toast.error("Incorrect answer");
+      }
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit answer"
+      );
+    } finally {
+      setIsSubmittingAnswer(false);
+    }
+  };
 
   if (quiz === undefined || liveData === undefined || !deviceFingerprint) {
     return (
@@ -324,6 +367,90 @@ export function PlayerView({ quizId }: PlayerViewProps) {
               <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3 text-sm text-muted-foreground">
                 This usually takes a few seconds ⚡
               </div>
+            </div>
+          ) : quiz.phase === "answering" ? (
+            <div className="space-y-6">
+              <div className="text-center space-y-4">
+                <Play className="w-12 h-12 mx-auto mb-4 text-green-500" />
+                <h3 className="text-lg font-semibold mb-4">
+                  {liveData?.currentRound?.promptText ||
+                    "Answer this question!"}
+                </h3>
+
+                {/* Timer */}
+                {liveData?.quiz.answerDeadlineAt && (
+                  <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 text-sm text-muted-foreground mb-4">
+                    Time remaining:{" "}
+                    {Math.max(
+                      0,
+                      Math.ceil(
+                        (liveData.quiz.answerDeadlineAt - Date.now()) / 1000
+                      )
+                    )}
+                    s
+                  </div>
+                )}
+              </div>
+
+              {/* Answer Options */}
+              {liveData?.currentRound?.aiAnswerOptions && (
+                <div className="grid gap-3 max-w-md mx-auto">
+                  {liveData.currentRound.aiAnswerOptions.map(
+                    (option, index) => {
+                      const isSelected = selectedAnswer === option.id;
+                      const showResult = hasAnswered && isSelected;
+
+                      return (
+                        <Button
+                          key={option.id}
+                          onClick={() =>
+                            !hasAnswered &&
+                            !isSubmittingAnswer &&
+                            handleSubmitAnswer(option.id)
+                          }
+                          disabled={hasAnswered || isSubmittingAnswer}
+                          className={`p-4 h-auto text-left justify-start transition-all duration-200 ${
+                            isSelected && hasAnswered
+                              ? "ring-2 ring-primary"
+                              : ""
+                          }`}
+                          variant={
+                            isSelected && hasAnswered ? "default" : "outline"
+                          }
+                        >
+                          <div className="flex items-center gap-3 w-full">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                isSelected && hasAnswered
+                                  ? "bg-primary/20 text-primary"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + index)}
+                            </div>
+                            <div className="flex-1 text-sm">{option.text}</div>
+                          </div>
+                        </Button>
+                      );
+                    }
+                  )}
+                </div>
+              )}
+
+              {/* Status Messages */}
+              {hasAnswered ? (
+                <div className="text-center">
+                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm text-blue-600 dark:text-blue-400">
+                    ✅ Answer submitted! Waiting for other players...
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Select your answer quickly for bonus points!
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center">
