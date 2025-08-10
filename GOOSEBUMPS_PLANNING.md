@@ -306,11 +306,11 @@ Milestone 0 – Repo Hygiene (Day 0–0.5)
 - [x] Add `ENV` documentation and `.env.example` for web and Convex.
 
 Milestone 1 – Landing Page & Design System (Day 0.5–1.5)
-- [ ] `/` – public marketing landing page: hero, value props, features, CTA to sign in/create a quiz.
-- [ ] Establish design baseline: Tailwind theme tokens, typography scale, spacing rhythm; ensure use of `flex` and `gap` utilities.
-- [ ] SEO basics: title/description, social image, Open Graph tags.
-- [ ] Analytics hook (e.g., simple pageview) and basic lighthouse pass.
-- [ ] Styling & interaction review for `/`: ensure consistency and add tasteful motion (e.g., subtle hero reveal, button micro-interactions).
+- [x] `/` – public marketing landing page: hero, value props, features, CTA to sign in/create a quiz.
+- [x] Establish design baseline: Tailwind theme tokens, typography scale, spacing rhythm; ensure use of `flex` and `gap` utilities.
+- [x] SEO basics: title/description, social image, Open Graph tags.
+- [x] Analytics hook (e.g., simple pageview) and basic lighthouse pass.
+- [x] Styling & interaction review for `/`: ensure consistency and add tasteful motion (e.g., subtle hero reveal, button micro-interactions).
 
 Milestone 2 – Data & Auth Foundations (Day 1–2)
 - [ ] Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
