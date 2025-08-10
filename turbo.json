@@ -3,15 +3,31 @@
 	"ui": "tui",
 	"tasks": {
 		"build": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", ".env*"],
-			"outputs": ["dist/**"]
+			"dependsOn": [
+				"^build"
+			],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				".env*"
+			],
+			"outputs": [
+				"dist/**"
+			],
+			"env": [
+				"CLERK_JWT_ISSUER_DOMAIN",
+				"CLERK_SECRET_KEY",
+				"GOOGLE_GEMINI_API_KEY"
+			]
 		},
 		"lint": {
-			"dependsOn": ["^lint"]
+			"dependsOn": [
+				"^lint"
+			]
 		},
 		"check-types": {
-			"dependsOn": ["^check-types"]
+			"dependsOn": [
+				"^check-types"
+			]
 		},
 		"dev": {
 			"cache": false,
@@ -21,6 +37,5 @@
 			"cache": false,
 			"persistent": true
 		}
-		
-			}
+	}
 }
