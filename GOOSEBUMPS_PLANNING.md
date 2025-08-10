@@ -329,7 +329,7 @@ Milestone 4 – Presenter View & Lobby (Day 3–4)
 - [x] Styling & interaction review for `/present/[quizId]`: list animations for players joining/leaving; button feedback; accessibility.
 - [x] `/join`: entry form to enter code; creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
 - [x] Styling & interaction review for `/join`: form consistency; transitions between steps; clear error states.
-- [ ] `/join/[joinCode]`: prefilled code variant to enter name and join.
+- [x] `/join/[joinCode]`: prefilled code variant to enter name and join.
 - [x] Styling & interaction review for `/join/[joinCode]`: ensure consistency with `/join`; tasteful motion.
 
 Milestone 5 – Prompting & AI Generation (Day 4–6)
