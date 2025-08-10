@@ -16,6 +16,8 @@ type PresenterViewProps = {
 
 export function PresenterView({ quizId }: PresenterViewProps) {
   const [isStarting, setIsStarting] = useState(false);
+  const [isLockingAnswers, setIsLockingAnswers] = useState(false);
+  const [isAdvancingPhase, setIsAdvancingPhase] = useState(false);
 
   // Get quiz details
   const quiz = useQuery(api.quizzes.getQuiz, {
@@ -27,8 +29,15 @@ export function PresenterView({ quizId }: PresenterViewProps) {
     joinCode: quiz?.joinCode || "",
   });
 
-  // Start game mutation
+  // Get leaderboard for scoreboard phase
+  const leaderboard = useQuery(api.quizzes.getLeaderboard, {
+    quizId: quiz?._id as Id<"quizzes">,
+  });
+
+  // Mutations
   const startGame = useMutation(api.quizzes.startGame);
+  const lockAnswers = useMutation(api.quizzes.lockAnswers);
+  const advancePhase = useMutation(api.quizzes.advancePhase);
 
   if (quiz === undefined || liveData === undefined) {
     return <LoaderContainer />;
@@ -76,6 +85,49 @@ export function PresenterView({ quizId }: PresenterViewProps) {
       );
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  const handleLockAnswers = async () => {
+    if (!liveData?.currentRound) {
+      toast.error("No active round to lock answers for!");
+      return;
+    }
+
+    setIsLockingAnswers(true);
+    try {
+      await lockAnswers({
+        quizId: quiz._id,
+        roundId: liveData.currentRound._id,
+      });
+      toast.success("Answers locked!");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to lock answers"
+      );
+    } finally {
+      setIsLockingAnswers(false);
+    }
+  };
+
+  const handleAdvancePhase = async () => {
+    setIsAdvancingPhase(true);
+    try {
+      const result = await advancePhase({ quizId: quiz._id });
+
+      if (result.nextPhase === "scoreboard") {
+        toast.success("Showing scoreboard!");
+      } else if (result.nextPhase === "prompting") {
+        toast.success(`Starting Round ${(result.nextRound || 0) + 1}!`);
+      } else if (result.nextPhase === "finished") {
+        toast.success("Quiz completed!");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to advance phase"
+      );
+    } finally {
+      setIsAdvancingPhase(false);
     }
   };
 
@@ -180,6 +232,45 @@ export function PresenterView({ quizId }: PresenterViewProps) {
                 Copy Join Link
               </Button>
             </div>
+
+            {/* Phase Controls */}
+            {quiz.phase === "answering" && (
+              <Button
+                onClick={handleLockAnswers}
+                disabled={isLockingAnswers}
+                className="w-full"
+              >
+                {isLockingAnswers ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2" />
+                    Locking...
+                  </>
+                ) : (
+                  "Lock Answers Early"
+                )}
+              </Button>
+            )}
+
+            {(quiz.phase === "reveal" || quiz.phase === "scoreboard") && (
+              <Button
+                onClick={handleAdvancePhase}
+                disabled={isAdvancingPhase}
+                className="w-full"
+              >
+                {isAdvancingPhase ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2" />
+                    Advancing...
+                  </>
+                ) : quiz.phase === "reveal" ? (
+                  "Show Scoreboard"
+                ) : quiz.currentRoundIndex + 1 < quiz.config.totalRounds ? (
+                  `Start Round ${quiz.currentRoundIndex + 2}`
+                ) : (
+                  "Finish Quiz"
+                )}
+              </Button>
+            )}
           </CardContent>
         </Card>
 

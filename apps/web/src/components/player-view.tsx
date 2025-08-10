@@ -17,7 +17,7 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 type PlayerViewProps = {
@@ -36,6 +36,7 @@ export function PlayerView({ quizId }: PlayerViewProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
 
   // Set device fingerprint on client side
   useEffect(() => {
@@ -52,11 +53,46 @@ export function PlayerView({ quizId }: PlayerViewProps) {
     joinCode: quiz?.joinCode || "",
   });
 
+  // Get leaderboard for scoreboard phase
+  const leaderboard = useQuery(api.quizzes.getLeaderboard, {
+    quizId: quiz?._id as Id<"quizzes">,
+  });
+
   // Reset answer state when round changes
   useEffect(() => {
     setSelectedAnswer("");
     setHasAnswered(false);
   }, [liveData?.currentRound?._id]);
+
+  // Countdown timer for answering phase
+  const updateTimeRemaining = useCallback(() => {
+    if (quiz?.phase === "answering" && liveData?.quiz.answerDeadlineAt) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((liveData.quiz.answerDeadlineAt - Date.now()) / 1000)
+      );
+      setTimeRemaining(remaining);
+    } else if (quiz?.phase === "prompting" && liveData?.quiz.promptDeadlineAt) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((liveData.quiz.promptDeadlineAt - Date.now()) / 1000)
+      );
+      setTimeRemaining(remaining);
+    } else {
+      setTimeRemaining(0);
+    }
+  }, [
+    quiz?.phase,
+    liveData?.quiz.answerDeadlineAt,
+    liveData?.quiz.promptDeadlineAt,
+  ]);
+
+  // Update timer every second
+  useEffect(() => {
+    updateTimeRemaining();
+    const interval = setInterval(updateTimeRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [updateTimeRemaining]);
 
   // Mutations
   const submitPrompt = useMutation(api.quizzes.submitPrompt);
@@ -379,15 +415,30 @@ export function PlayerView({ quizId }: PlayerViewProps) {
 
                 {/* Timer */}
                 {liveData?.quiz.answerDeadlineAt && (
-                  <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 text-sm text-muted-foreground mb-4">
-                    Time remaining:{" "}
-                    {Math.max(
-                      0,
-                      Math.ceil(
-                        (liveData.quiz.answerDeadlineAt - Date.now()) / 1000
-                      )
+                  <div
+                    className={`rounded-lg p-3 text-sm mb-4 transition-colors duration-300 ${
+                      timeRemaining <= 5
+                        ? "bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400"
+                        : timeRemaining <= 10
+                          ? "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-600 dark:text-yellow-400"
+                          : "bg-green-50 dark:bg-green-950/20 text-muted-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span className="font-mono text-lg">
+                        {String(Math.floor(timeRemaining / 60)).padStart(
+                          2,
+                          "0"
+                        )}
+                        :{String(timeRemaining % 60).padStart(2, "0")}
+                      </span>
+                    </div>
+                    {timeRemaining <= 5 && timeRemaining > 0 && (
+                      <div className="text-center mt-1 animate-pulse">
+                        Hurry up!
+                      </div>
                     )}
-                    s
                   </div>
                 )}
               </div>
@@ -449,6 +500,168 @@ export function PlayerView({ quizId }: PlayerViewProps) {
                   <p className="text-sm text-muted-foreground">
                     Select your answer quickly for bonus points!
                   </p>
+                </div>
+              )}
+            </div>
+          ) : quiz.phase === "reveal" ? (
+            <div className="text-center space-y-4">
+              <div className="text-6xl mb-4 animate-bounce">🎉</div>
+              <h3 className="text-lg font-semibold mb-4">
+                {liveData?.currentRound?.promptText || "Question"}
+              </h3>
+
+              {/* Show correct answer */}
+              {liveData?.currentRound?.aiAnswerOptions && (
+                <div className="max-w-md mx-auto space-y-3">
+                  {liveData.currentRound.aiAnswerOptions.map(
+                    (option, index) => {
+                      const isSelected = selectedAnswer === option.id;
+                      const isCorrect = option.isCorrect;
+
+                      return (
+                        <div
+                          key={option.id}
+                          className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                            isCorrect
+                              ? "bg-green-100 dark:bg-green-950/50 border-green-500 text-green-800 dark:text-green-200"
+                              : isSelected
+                                ? "bg-red-100 dark:bg-red-950/50 border-red-500 text-red-800 dark:text-red-200"
+                                : "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-muted-foreground"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 w-full">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                isCorrect
+                                  ? "bg-green-500 text-white"
+                                  : isSelected
+                                    ? "bg-red-500 text-white"
+                                    : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {isCorrect
+                                ? "✓"
+                                : String.fromCharCode(65 + index)}
+                            </div>
+                            <div className="flex-1 text-sm font-medium">
+                              {option.text}
+                            </div>
+                            {isCorrect && (
+                              <div className="text-xs font-semibold bg-green-500 text-white px-2 py-1 rounded">
+                                CORRECT
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              )}
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm text-blue-600 dark:text-blue-400">
+                {hasAnswered && selectedAnswer
+                  ? liveData?.currentRound?.aiAnswerOptions?.find(
+                      (o) => o.id === selectedAnswer
+                    )?.isCorrect
+                    ? "🎉 You got it right! Great job!"
+                    : "😔 Better luck next time!"
+                  : "⏰ You didn't answer in time"}
+              </div>
+            </div>
+          ) : quiz.phase === "scoreboard" ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-4xl mb-4">🏆</div>
+                <h3 className="text-lg font-semibold">Leaderboard</h3>
+                <p className="text-sm text-muted-foreground">
+                  After Round {quiz.currentRoundIndex + 1}
+                </p>
+              </div>
+
+              {/* Leaderboard */}
+              {leaderboard && leaderboard.length > 0 ? (
+                <div className="space-y-2 max-w-md mx-auto">
+                  {leaderboard.slice(0, 10).map((player, index) => {
+                    const isMe = player._id === myPlayer?._id;
+                    const position = player.position;
+
+                    return (
+                      <div
+                        key={player._id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
+                          isMe
+                            ? "bg-primary/10 border-primary ring-2 ring-primary/20"
+                            : "bg-card border-border"
+                        } ${
+                          position === 1
+                            ? "bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20"
+                            : position === 2
+                              ? "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-950/20 dark:to-gray-900/20"
+                              : position === 3
+                                ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20"
+                                : ""
+                        }`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            position === 1
+                              ? "bg-yellow-500 text-white"
+                              : position === 2
+                                ? "bg-gray-500 text-white"
+                                : position === 3
+                                  ? "bg-orange-500 text-white"
+                                  : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {position === 1
+                            ? "🥇"
+                            : position === 2
+                              ? "🥈"
+                              : position === 3
+                                ? "🥉"
+                                : position}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-medium truncate ${isMe ? "text-primary" : ""}`}
+                          >
+                            {player.name}
+                            {isMe && (
+                              <span className="text-xs text-primary ml-1">
+                                (You)
+                              </span>
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-sm font-bold">
+                            {player.score}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            points
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <p>No scores yet</p>
+                </div>
+              )}
+
+              {/* Next round info */}
+              {quiz.currentRoundIndex + 1 < quiz.config.totalRounds ? (
+                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm text-blue-600 dark:text-blue-400 text-center">
+                  🎯 Get ready for Round {quiz.currentRoundIndex + 2}!
+                </div>
+              ) : (
+                <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 text-sm text-green-600 dark:text-green-400 text-center">
+                  🏁 Final results! Thanks for playing!
                 </div>
               )}
             </div>
@@ -555,6 +768,34 @@ export function PlayerView({ quizId }: PlayerViewProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Show prompting timer */}
+      {quiz.phase === "prompting" &&
+        isPrompter &&
+        liveData?.quiz.promptDeadlineAt && (
+          <Card>
+            <CardContent className="p-4">
+              <div
+                className={`text-center rounded-lg p-3 transition-colors duration-300 ${
+                  timeRemaining <= 5
+                    ? "bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400"
+                    : timeRemaining <= 10
+                      ? "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-600 dark:text-yellow-400"
+                      : "bg-blue-50 dark:bg-blue-950/20 text-muted-foreground"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Clock className="w-4 h-4" />
+                  <span className="font-mono text-lg">
+                    {String(Math.floor(timeRemaining / 60)).padStart(2, "0")}:
+                    {String(timeRemaining % 60).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="text-xs">Time remaining to submit prompt</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Quiz Info */}
       <Card>

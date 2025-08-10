@@ -1,6 +1,7 @@
 import {
   internalAction,
   internalMutation,
+  internalQuery,
   mutation,
   query,
 } from "./_generated/server";
@@ -601,6 +602,17 @@ export const advanceToAnswering = internalMutation({
       answerDeadlineAt,
       updatedAt: now,
     });
+
+    // Schedule auto-lock action for when time expires
+    await ctx.scheduler.runAfter(
+      quiz.config.secondsPerQuestion * 1000,
+      internal.quizzes.autoLockAnswers,
+      {
+        quizId,
+        roundId,
+        expectedDeadline: answerDeadlineAt,
+      }
+    );
   },
 });
 
@@ -709,11 +721,420 @@ export const submitAnswer = mutation({
       lastSeenAt: now,
     });
 
+    // Check if all players have now answered (inline check)
+    // Get all non-host players
+    const allPlayers = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    // Get all answers for this round (including the one just submitted)
+    const allAnswers = await ctx.db
+      .query("playerAnswers")
+      .withIndex("byRound", (q) => q.eq("roundId", roundId))
+      .collect();
+
+    // If all players have answered, schedule auto-advance to reveal phase
+    if (allPlayers.length > 0 && allAnswers.length >= allPlayers.length) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.quizzes.autoLockAnswersInternal,
+        {
+          quizId,
+          roundId,
+        }
+      );
+    }
+
     return {
       success: true,
       isCorrect: selectedOption.isCorrect,
       pointsEarned: points,
     };
+  },
+});
+
+/**
+ * Lock answers and transition to reveal phase
+ * Called when time expires or all players have answered
+ */
+export const lockAnswers = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+  },
+  handler: async (ctx, { quizId, roundId }) => {
+    // Verify user is authenticated (host only)
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User must be authenticated");
+    }
+
+    // Get quiz and verify ownership
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.authorId !== identity.subject) {
+      throw new Error("Only quiz author can lock answers");
+    }
+
+    // Verify quiz is in answering phase
+    if (quiz.phase !== "answering") {
+      throw new Error("Can only lock answers during answering phase");
+    }
+
+    // Get round and verify it exists
+    const round = await ctx.db.get(roundId);
+    if (!round || round.quizId !== quizId) {
+      throw new Error("Round not found or doesn't belong to this quiz");
+    }
+
+    if (round.roundIndex !== quiz.currentRoundIndex) {
+      throw new Error("Round is not the current active round");
+    }
+
+    // Get all players for this quiz (excluding host)
+    const players = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    // Get all answers for this round
+    const answers = await ctx.db
+      .query("playerAnswers")
+      .withIndex("byRound", (q) => q.eq("roundId", roundId))
+      .collect();
+
+    // Create a map of players who have answered
+    const answeredPlayerIds = new Set(answers.map((a) => a.playerId));
+
+    // For players who didn't answer, create a "no answer" record with 0 points
+    const now = Date.now();
+    for (const player of players) {
+      if (!answeredPlayerIds.has(player._id)) {
+        // Record no answer with 0 points
+        await ctx.db.insert("playerAnswers", {
+          quizId,
+          roundId,
+          playerId: player._id,
+          selectedOptionId: "", // Empty string indicates no answer
+          isCorrect: false,
+          submittedAt: now,
+        });
+      }
+    }
+
+    // Mark round as completed
+    await ctx.db.patch(roundId, {
+      completedAt: now,
+    });
+
+    // Transition quiz to reveal phase
+    await ctx.db.patch(quizId, {
+      phase: "reveal",
+      answerDeadlineAt: undefined,
+      updatedAt: now,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Advance to next phase (reveal -> scoreboard -> next round or finished)
+ * Host-only mutation
+ */
+export const advancePhase = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+  },
+  handler: async (ctx, { quizId }) => {
+    // Verify user is authenticated (host only)
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User must be authenticated");
+    }
+
+    // Get quiz and verify ownership
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.authorId !== identity.subject) {
+      throw new Error("Only quiz author can advance phases");
+    }
+
+    const now = Date.now();
+
+    if (quiz.phase === "reveal") {
+      // Advance from reveal to scoreboard
+      await ctx.db.patch(quizId, {
+        phase: "scoreboard",
+        updatedAt: now,
+      });
+      return { success: true, nextPhase: "scoreboard" };
+    } else if (quiz.phase === "scoreboard") {
+      // Check if there are more rounds
+      const nextRoundIndex = quiz.currentRoundIndex + 1;
+
+      if (nextRoundIndex < quiz.config.totalRounds) {
+        // Start next round
+        // Get all non-host players
+        const players = await ctx.db
+          .query("players")
+          .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+          .filter((q) => q.eq(q.field("isHost"), false))
+          .filter((q) => q.eq(q.field("kickedAt"), undefined))
+          .collect();
+
+        if (players.length === 0) {
+          throw new Error("No players available for next round");
+        }
+
+        // Select random prompter from available players
+        const randomPrompter =
+          players[Math.floor(Math.random() * players.length)];
+        const promptDeadlineAt = now + quiz.config.secondsForPrompt * 1000;
+
+        // Create next round
+        await ctx.db.insert("rounds", {
+          quizId,
+          roundIndex: nextRoundIndex,
+          prompterPlayerId: randomPrompter._id,
+        });
+
+        // Update quiz to next round and prompting phase
+        await ctx.db.patch(quizId, {
+          phase: "prompting",
+          currentRoundIndex: nextRoundIndex,
+          promptDeadlineAt,
+          updatedAt: now,
+        });
+
+        return {
+          success: true,
+          nextPhase: "prompting",
+          nextRound: nextRoundIndex,
+        };
+      } else {
+        // Quiz is finished
+        await ctx.db.patch(quizId, {
+          phase: "finished",
+          updatedAt: now,
+        });
+        return { success: true, nextPhase: "finished" };
+      }
+    } else {
+      throw new Error(`Cannot advance from phase: ${quiz.phase}`);
+    }
+  },
+});
+
+/**
+ * Get leaderboard for a quiz (sorted by score descending)
+ */
+export const getLeaderboard = query({
+  args: { quizId: v.id("quizzes") },
+  handler: async (ctx, { quizId }) => {
+    // Get all non-host players for this quiz
+    const players = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    // Sort by score descending, then by name for ties
+    const sortedPlayers = players.sort((a, b) => {
+      if (a.score !== b.score) {
+        return b.score - a.score; // Higher scores first
+      }
+      return a.name.localeCompare(b.name); // Alphabetical for ties
+    });
+
+    // Add position to each player
+    return sortedPlayers.map((player, index) => ({
+      ...player,
+      position: index + 1,
+    }));
+  },
+});
+
+/**
+ * Internal action to check for timeout and auto-lock answers
+ * Scheduled when answering phase begins
+ */
+export const autoLockAnswers = internalAction({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+    expectedDeadline: v.number(),
+  },
+  handler: async (ctx, { quizId, roundId, expectedDeadline }) => {
+    // Check if quiz is still in answering phase and deadline hasn't changed
+    const quiz = await ctx.runQuery(internal.quizzes.getQuizForAutoLock, {
+      quizId,
+      expectedDeadline,
+    });
+
+    if (!quiz) {
+      // Quiz has moved on or deadline changed, don't lock
+      return { skipped: true };
+    }
+
+    // Check if all players have answered
+    const allAnswered = await ctx.runQuery(
+      internal.quizzes.checkAllPlayersAnswered,
+      {
+        quizId,
+        roundId,
+      }
+    );
+
+    if (allAnswered) {
+      // All players already answered, don't need to lock
+      return { skipped: true, reason: "all_answered" };
+    }
+
+    // Auto-lock answers due to timeout
+    await ctx.runMutation(internal.quizzes.autoLockAnswersInternal, {
+      quizId,
+      roundId,
+    });
+
+    return { success: true, reason: "timeout" };
+  },
+});
+
+/**
+ * Internal query to check quiz state for auto-lock
+ */
+export const getQuizForAutoLock = internalQuery({
+  args: {
+    quizId: v.id("quizzes"),
+    expectedDeadline: v.number(),
+  },
+  handler: async (ctx, { quizId, expectedDeadline }) => {
+    const quiz = await ctx.db.get(quizId);
+
+    if (
+      !quiz ||
+      quiz.phase !== "answering" ||
+      !quiz.answerDeadlineAt ||
+      quiz.answerDeadlineAt !== expectedDeadline
+    ) {
+      return null;
+    }
+
+    return quiz;
+  },
+});
+
+/**
+ * Internal query to check if all players have answered
+ */
+export const checkAllPlayersAnswered = internalQuery({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+  },
+  handler: async (ctx, { quizId, roundId }) => {
+    // Get all non-host players
+    const players = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    // Get all answers for this round
+    const answers = await ctx.db
+      .query("playerAnswers")
+      .withIndex("byRound", (q) => q.eq("roundId", roundId))
+      .collect();
+
+    return players.length > 0 && answers.length >= players.length;
+  },
+});
+
+/**
+ * Internal mutation to auto-lock answers (timeout case)
+ */
+export const autoLockAnswersInternal = internalMutation({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+  },
+  handler: async (ctx, { quizId, roundId }) => {
+    // Get quiz
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz || quiz.phase !== "answering") {
+      return { skipped: true };
+    }
+
+    // Get round
+    const round = await ctx.db.get(roundId);
+    if (
+      !round ||
+      round.quizId !== quizId ||
+      round.roundIndex !== quiz.currentRoundIndex
+    ) {
+      return { skipped: true };
+    }
+
+    // Get all players for this quiz (excluding host)
+    const players = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
+      .filter((q) => q.eq(q.field("isHost"), false))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .collect();
+
+    // Get all answers for this round
+    const answers = await ctx.db
+      .query("playerAnswers")
+      .withIndex("byRound", (q) => q.eq("roundId", roundId))
+      .collect();
+
+    // Create a map of players who have answered
+    const answeredPlayerIds = new Set(answers.map((a) => a.playerId));
+
+    // For players who didn't answer, create a "no answer" record with 0 points
+    const now = Date.now();
+    for (const player of players) {
+      if (!answeredPlayerIds.has(player._id)) {
+        // Record no answer with 0 points
+        await ctx.db.insert("playerAnswers", {
+          quizId,
+          roundId,
+          playerId: player._id,
+          selectedOptionId: "", // Empty string indicates no answer
+          isCorrect: false,
+          submittedAt: now,
+        });
+      }
+    }
+
+    // Mark round as completed
+    await ctx.db.patch(roundId, {
+      completedAt: now,
+    });
+
+    // Transition quiz to reveal phase
+    await ctx.db.patch(quizId, {
+      phase: "reveal",
+      answerDeadlineAt: undefined,
+      updatedAt: now,
+    });
+
+    return { success: true };
   },
 });
 
