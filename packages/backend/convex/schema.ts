@@ -22,7 +22,6 @@ export default defineSchema({
     ),
     currentRoundIndex: v.number(), // 0-based
     joinCode: v.string(), // e.g., 6 chars
-    joinLinkSlug: v.string(), // human-friendly slug for link join
     answerDeadlineAt: v.optional(v.number()), // only in answering phase
     promptDeadlineAt: v.optional(v.number()), // only in prompting phase
     createdAt: v.number(),

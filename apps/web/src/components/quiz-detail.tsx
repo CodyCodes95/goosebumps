@@ -27,6 +27,7 @@ import {
   Link,
   Copy,
   ArrowLeft,
+  LinkIcon,
 } from "lucide-react";
 import type { Id } from "@goosebumps/backend";
 
@@ -110,9 +111,9 @@ export default function QuizDetail({ quizId }: QuizDetailProps) {
     }
   };
 
-  const handleCopyJoinLink = async (joinLinkSlug: string) => {
+  const handleCopyJoinLink = async (joinCode: string) => {
     try {
-      const joinUrl = `${window.location.origin}/join/${joinLinkSlug}`;
+      const joinUrl = `${window.location.origin}/join/${joinCode}`;
       await navigator.clipboard.writeText(joinUrl);
       toast.success("Join link copied to clipboard!");
     } catch (error) {
@@ -430,7 +431,7 @@ export default function QuizDetail({ quizId }: QuizDetailProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5" />
+              <LinkIcon className="h-5 w-5" />
               Join Information
             </CardTitle>
             <CardDescription>
@@ -461,13 +462,13 @@ export default function QuizDetail({ quizId }: QuizDetailProps) {
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">Join Link</span>
                   <span className="text-sm text-muted-foreground font-mono">
-                    /join/{specificQuiz.joinLinkSlug}
+                    /join/{specificQuiz.joinCode}
                   </span>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleCopyJoinLink(specificQuiz.joinLinkSlug)}
+                  onClick={() => handleCopyJoinLink(specificQuiz.joinCode)}
                   className="transition-all hover:scale-105"
                 >
                   <Copy className="h-4 w-4" />

@@ -128,36 +128,7 @@ export const createQuiz = mutation({
       return result;
     };
 
-    // Generate unique join link slug
-    const generateJoinSlug = () => {
-      const words = [
-        "quick",
-        "smart",
-        "fun",
-        "cool",
-        "bright",
-        "happy",
-        "fast",
-        "clever",
-      ];
-      const animals = [
-        "fox",
-        "owl",
-        "cat",
-        "dog",
-        "bird",
-        "bear",
-        "deer",
-        "seal",
-      ];
-      const word1 = words[Math.floor(Math.random() * words.length)];
-      const word2 = animals[Math.floor(Math.random() * animals.length)];
-      const num = Math.floor(Math.random() * 99) + 1;
-      return `${word1}-${word2}-${num}`;
-    };
-
     let joinCode = generateJoinCode();
-    let joinLinkSlug = generateJoinSlug();
 
     // Ensure join code is unique
     let existingQuiz = await ctx.db
@@ -183,7 +154,6 @@ export const createQuiz = mutation({
       phase: "lobby",
       currentRoundIndex: 0,
       joinCode,
-      joinLinkSlug,
       createdAt: now,
       updatedAt: now,
     });
@@ -199,7 +169,7 @@ export const createQuiz = mutation({
       lastSeenAt: now,
     });
 
-    return { quizId, joinCode, joinLinkSlug };
+    return { quizId, joinCode };
   },
 });
 

@@ -84,7 +84,6 @@ type Quiz = {
   phase: SessionPhase; // lifecycle state lives on quiz
   currentRoundIndex: number; // 0-based
   joinCode: string; // e.g., 6 chars
-  joinLinkSlug: string; // human-friendly slug for link join
   answerDeadlineAt?: number; // only in answering phase
   promptDeadlineAt?: number; // only in prompting phase
   createdAt: number; // Date.now()
@@ -162,7 +161,7 @@ Queries:
 - `getLeaderboard({ quizId })` – computed leaderboard.
 
 Mutations (host-only unless noted):
-- `createQuiz({ name, config })` – create quiz owned by user; initialize phase `lobby`, generate join code/slug.
+- `createQuiz({ name, config })` – create quiz owned by user; initialize phase `lobby`, generate join code.
 - `updateQuizConfig({ quizId, config })` – validate ownership; only allowed in `lobby`.
 - `endQuiz({ quizId })` – set `finished`.
 - `startGame({ quizId })` – transition `lobby -> prompting`, create `rounds[0]`, choose prompter, set `promptDeadlineAt`.
@@ -219,7 +218,7 @@ Routes (host):
 - `/present/[quizId]` – host presenter view: join code, player list, controls (start/advance/end), live phase display.
 
 Routes (players):
-- `/join` – form to enter code or paste link.
+- `/join` – form to enter code.
 - `/join/[joinCode]` – lightweight page to enter name and join; creates Player.
 - `/play/[quizId]` – player view; renders according to `phase`:
   - `lobby`: waiting room
