@@ -15,8 +15,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "goosebumps",
-  description: "goosebumps",
+  title: "Goosebumps - Interactive Quiz Game Platform",
+  description:
+    "Create engaging quiz experiences where players submit questions and AI generates answers. Like Kahoot meets AI-powered trivia for groups, classrooms, and events.",
+  keywords:
+    "quiz, trivia, interactive, AI, multiplayer, game, education, classroom, group activity",
+  authors: [{ name: "Goosebumps Team" }],
+  openGraph: {
+    title: "Goosebumps - Interactive Quiz Game Platform",
+    description:
+      "Create engaging quiz experiences where players submit questions and AI generates answers. Like Kahoot meets AI-powered trivia.",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Goosebumps - Interactive Quiz Game Platform",
+    description:
+      "Create engaging quiz experiences where players submit questions and AI generates answers.",
+  },
 };
 
 export default function RootLayout({

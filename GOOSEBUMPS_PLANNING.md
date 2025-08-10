@@ -305,7 +305,7 @@ Milestone 0 – Repo Hygiene (Day 0–0.5)
 - [x] Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
 - [x] Add `ENV` documentation and `.env.example` for web and Convex.
 
-Milestone 1 – Marketing Landing Page & Design System (Day 0.5–1.5)
+Milestone 1 – Landing Page & Design System (Day 0.5–1.5)
 - [ ] `/` – public marketing landing page: hero, value props, features, CTA to sign in/create a quiz.
 - [ ] Establish design baseline: Tailwind theme tokens, typography scale, spacing rhythm; ensure use of `flex` and `gap` utilities.
 - [ ] SEO basics: title/description, social image, Open Graph tags.

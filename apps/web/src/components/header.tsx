@@ -1,31 +1,32 @@
 "use client";
 import Link from "next/link";
 
-import { ModeToggle } from "./mode-toggle";
+import { UserMenu } from "./user-menu";
 
 export default function Header() {
-  const links = [
-    { to: "/", label: "Home" },
-    { to: "/todos", label: "Todos" },
-  ];
-
   return (
-    <div>
-      <div className="flex flex-row items-center justify-between px-2 py-1">
-        <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => {
-            return (
-              <Link key={to} href={to}>
-                {label}
-              </Link>
-            );
-          })}
+    <header className="border-b">
+      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold">
+          📚 Goosebumps
+        </Link>
+
+        <nav className="flex items-center gap-6">
+          <Link
+            href="/join"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Join Game
+          </Link>
+          <Link
+            href="/quizzes"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            My Quizzes
+          </Link>
+          <UserMenu />
         </nav>
-        <div className="flex items-center gap-2">
-          <ModeToggle />
-        </div>
       </div>
-      <hr />
-    </div>
+    </header>
   );
 }
