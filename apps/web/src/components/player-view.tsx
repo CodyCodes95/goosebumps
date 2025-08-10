@@ -1,12 +1,24 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api, type Id } from "@goosebumps/backend";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { LoaderContainer } from "./loader";
-import { Users, Clock, Play, Zap } from "lucide-react";
+import {
+  Users,
+  Clock,
+  Play,
+  Zap,
+  Send,
+  Loader2,
+  MessageSquare,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type PlayerViewProps = {
   quizId: string;
@@ -19,11 +31,51 @@ function getDeviceFingerprint(): string {
 
 export function PlayerView({ quizId }: PlayerViewProps) {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
+  const [promptText, setPromptText] = useState("");
+  const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
 
   // Set device fingerprint on client side
   useEffect(() => {
     setDeviceFingerprint(getDeviceFingerprint());
   }, []);
+
+  // Mutations
+  const submitPrompt = useMutation(api.quizzes.submitPrompt);
+
+  // Handle prompt submission
+  const handleSubmitPrompt = async () => {
+    if (!promptText.trim() || !liveData?.currentRound || isSubmittingPrompt) {
+      return;
+    }
+
+    const trimmed = promptText.trim();
+    if (trimmed.length < 5) {
+      toast.error("Prompt must be at least 5 characters long");
+      return;
+    }
+    if (trimmed.length > 500) {
+      toast.error("Prompt must be 500 characters or less");
+      return;
+    }
+
+    setIsSubmittingPrompt(true);
+    try {
+      await submitPrompt({
+        quizId: liveData.quiz._id,
+        roundId: liveData.currentRound._id,
+        promptText: trimmed,
+      });
+      setPromptText("");
+      toast.success("Prompt submitted! AI is generating questions...");
+    } catch (error) {
+      console.error("Error submitting prompt:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit prompt"
+      );
+    } finally {
+      setIsSubmittingPrompt(false);
+    }
+  };
 
   // Get public quiz data by ID first to get the join code
   const quiz = useQuery(api.quizzes.getQuizPublic, {
@@ -88,6 +140,9 @@ export function PlayerView({ quizId }: PlayerViewProps) {
 
   const nonHostPlayers = players.filter((p) => !p.isHost);
 
+  // Check if current player is the selected prompter
+  const isPrompter = liveData?.currentRound?.prompterPlayerId === myPlayer?._id;
+
   const getPhaseDisplay = () => {
     switch (quiz.phase) {
       case "lobby":
@@ -101,7 +156,7 @@ export function PlayerView({ quizId }: PlayerViewProps) {
         return {
           text: "Getting Prompt",
           color: "bg-yellow-500",
-          icon: Clock,
+          icon: MessageSquare,
           description: "Someone is writing a question...",
         };
       case "generating":
@@ -180,22 +235,116 @@ export function PlayerView({ quizId }: PlayerViewProps) {
         <CardHeader>
           <CardTitle className="text-center">{phaseDisplay.text}</CardTitle>
         </CardHeader>
-        <CardContent className="text-center py-8">
-          <PhaseIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground transition-all duration-500" />
-          <p className="text-muted-foreground mb-4">
-            {phaseDisplay.description}
-          </p>
+        <CardContent className="py-8">
+          {/* Prompting Phase - Show Input for Prompter, Standby for Others */}
+          {quiz.phase === "prompting" ? (
+            <div className="space-y-6">
+              {isPrompter ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-4 text-primary animate-pulse" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Your Turn to Write a Prompt!
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Write a topic or question that the AI will turn into a
+                      multiple-choice trivia question
+                    </p>
+                  </div>
 
-          {quiz.phase === "lobby" && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {nonHostPlayers.length}{" "}
-                {nonHostPlayers.length === 1 ? "player" : "players"} in lobby
+                  <div className="max-w-md mx-auto space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt-input">Your Prompt</Label>
+                      <Input
+                        id="prompt-input"
+                        value={promptText}
+                        onChange={(e) => setPromptText(e.target.value)}
+                        placeholder="e.g., Famous landmarks in France"
+                        maxLength={500}
+                        disabled={isSubmittingPrompt}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitPrompt();
+                          }
+                        }}
+                        className="text-center"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{promptText.length}/500 characters</span>
+                        <span>Minimum 5 characters</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleSubmitPrompt}
+                      disabled={
+                        promptText.trim().length < 5 || isSubmittingPrompt
+                      }
+                      className="w-full"
+                    >
+                      {isSubmittingPrompt ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Submit Prompt
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
+                  <h3 className="text-lg font-semibold">Wait Your Turn</h3>
+                  <p className="text-muted-foreground">
+                    {liveData?.players.find(
+                      (p) => p._id === liveData?.currentRound?.prompterPlayerId
+                    )?.name || "Another player"}{" "}
+                    is writing a question prompt
+                  </p>
+                  <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
+                    The AI will use their prompt to generate a trivia question
+                    with multiple choice answers
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : quiz.phase === "generating" ? (
+            <div className="text-center space-y-4">
+              <Zap className="w-12 h-12 mx-auto mb-4 text-purple-500 animate-bounce" />
+              <h3 className="text-lg font-semibold">AI is Working...</h3>
+              <p className="text-muted-foreground">
+                Creating a trivia question with multiple choice answers
               </p>
-              {nonHostPlayers.length < 2 && (
-                <p className="text-xs text-muted-foreground">
-                  Waiting for more players to join...
-                </p>
+              <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3 text-sm text-muted-foreground">
+                This usually takes a few seconds ⚡
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <PhaseIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground transition-all duration-500" />
+              <p className="text-muted-foreground mb-4">
+                {phaseDisplay.description}
+              </p>
+
+              {quiz.phase === "lobby" && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {nonHostPlayers.length}{" "}
+                    {nonHostPlayers.length === 1 ? "player" : "players"} in
+                    lobby
+                  </p>
+                  {nonHostPlayers.length < 2 && (
+                    <p className="text-xs text-muted-foreground">
+                      Waiting for more players to join...
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}

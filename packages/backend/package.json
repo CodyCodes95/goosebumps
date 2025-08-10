@@ -13,7 +13,9 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.3",
     "@t3-oss/env-core": "^0.13.8",
+    "ai": "^5.0.9",
     "convex": "^1.25.4",
     "zod": "^4.0.17"
   }
