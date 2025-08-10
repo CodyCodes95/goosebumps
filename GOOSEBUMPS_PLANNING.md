@@ -302,8 +302,8 @@ Dependencies and integration notes:
 ### Milestones & Detailed Tasks
 
 Milestone 0 – Repo Hygiene (Day 0–0.5)
-- [ ] Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
-- [ ] Add `ENV` documentation and `.env.example` for web and Convex.
+- [x] Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
+- [x] Add `ENV` documentation and `.env.example` for web and Convex.
 
 Milestone 1 – Marketing Landing Page & Design System (Day 0.5–1.5)
 - [ ] `/` – public marketing landing page: hero, value props, features, CTA to sign in/create a quiz.
