@@ -545,7 +545,7 @@ Return your response in this exact JSON format:
 
       // Create Google provider with API key
       const google = createGoogleGenerativeAI({
-        apiKey: process.env.GOOGLE_GEMINI_API_KEY,
+        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
       });
 
       // Call Gemini API

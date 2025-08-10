@@ -68,7 +68,7 @@ This repo uses t3-env for typesafe ENV validation. Builds will fail fast if vari
 - Validated in `apps/web/src/env.ts`:
   - `CLERK_SECRET_KEY`
   - `CLERK_JWT_ISSUER_DOMAIN`
-  - `GOOGLE_GEMINI_API_KEY`
+  - `GOOGLE_GENERATIVE_AI_API_KEY`
   - `CONVEX_DEPLOYMENT` (optional)
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   - `NEXT_PUBLIC_CONVEX_URL`
@@ -92,7 +92,7 @@ NEXT_PUBLIC_CONVEX_URL="https://<your-convex-deployment>.convex.cloud"
 CONVEX_DEPLOYMENT="dev"
 
 # AI (Gemini)
-GOOGLE_GEMINI_API_KEY="..."
+GOOGLE_GENERATIVE_AI_API_KEY="..."
 ```
 
 ### Convex (`packages/backend/convex`)
@@ -104,7 +104,7 @@ Convex reads env vars from its deployment. Set them with the CLI:
 ```bash
 # from repo root
 npx convex env set CLERK_JWT_ISSUER_DOMAIN "https://<your_clerk_issuer_domain>"
-npx convex env set GOOGLE_GEMINI_API_KEY "<your_gemini_api_key>"
+npx convex env set GOOGLE_GENERATIVE_AI_API_KEY "<your_gemini_api_key>"
 ```
 
 An example reference file is provided at `packages/backend/convex/convex.env.example`.
