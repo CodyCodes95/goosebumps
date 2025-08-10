@@ -10,20 +10,8 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2 text-xl font-bold">
           📚 Goosebumps
         </Link>
-
-        <nav className="flex items-center gap-6">
-          <Link
-            href="/join"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Join Game
-          </Link>
-          <Link
-            href="/quizzes"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            My Quizzes
-          </Link>
+        
+        <nav className="flex items-center">
           <UserMenu />
         </nav>
       </div>

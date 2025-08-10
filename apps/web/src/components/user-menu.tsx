@@ -12,6 +12,8 @@ import {
   Moon,
   Monitor,
   Settings,
+  Users,
+  Plus,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,10 +46,48 @@ export function UserMenu() {
 
   if (!isSignedIn) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => openSignIn()}>
-        <LogIn className="h-4 w-4" />
-        <span className="hidden sm:inline">Sign In</span>
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-48" align="end">
+          <DropdownMenuItem asChild>
+            <Link href="/join">
+              <Users className="h-4 w-4" />
+              Join Game
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Palette className="h-4 w-4" />
+              Theme
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                <Sun className="h-4 w-4" />
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <Moon className="h-4 w-4" />
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                <Monitor className="h-4 w-4" />
+                System
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => openSignIn()}>
+            <LogIn className="h-4 w-4" />
+            Sign In
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
@@ -90,8 +130,14 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
+            <Link href="/join">
+              <Users className="h-4 w-4" />
+              Join Game
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/quizzes">
-              <Settings className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               My Quizzes
             </Link>
           </DropdownMenuItem>
