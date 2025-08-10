@@ -59,3 +59,32 @@ goosebumps/
 - `bun dev:setup`: Setup and configure your Convex project
 - `bun check-types`: Check TypeScript types across all apps
 - `bun check`: Run Biome formatting and linting
+
+## Environment Variables (t3-env)
+
+This repo uses t3-env for typesafe ENV validation.
+
+- Web (`apps/web/src/env.ts`) validates:
+  - `CLERK_SECRET_KEY`
+  - `CLERK_JWT_ISSUER_DOMAIN`
+  - `CONVEX_DEPLOYMENT` (optional)
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - `NEXT_PUBLIC_CONVEX_URL`
+
+- Backend (`packages/backend/convex/env.ts`) validates:
+  - `CLERK_JWT_ISSUER_DOMAIN`
+
+On build, `apps/web/next.config.ts` imports `src/env.ts` via `jiti@^1` to fail fast if invalid.
+
+Provide the following in `.env` files or your deploy provider:
+
+```
+# common
+CLERK_JWT_ISSUER_DOMAIN="https://<your_clerk_domain>"
+
+# web only
+CLERK_SECRET_KEY="sk_..."  # required by Clerk middleware
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
+NEXT_PUBLIC_CONVEX_URL="https://<your-convex-deployment>.convex.cloud"
+CONVEX_DEPLOYMENT="dev" # optional
+```
