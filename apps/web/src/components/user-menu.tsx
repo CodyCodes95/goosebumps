@@ -11,7 +11,6 @@ import {
   Sun,
   Moon,
   Monitor,
-  Settings,
   Users,
   Plus,
 } from "lucide-react";
