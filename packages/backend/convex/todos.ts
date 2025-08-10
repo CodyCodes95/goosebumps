@@ -12,6 +12,9 @@ export const create = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
+    const auth = await ctx.auth.getUserIdentity();
+    console.log(`auth:`);
+    console.log(JSON.stringify(auth, null, 2)); 
     const newTodoId = await ctx.db.insert("todos", {
       text: args.text,
       completed: false,

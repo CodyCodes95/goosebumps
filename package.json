@@ -16,7 +16,8 @@
     "dev:setup": "turbo -F @goosebumps/backend dev:setup"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.30.0"
+    "@clerk/nextjs": "^6.30.0",
+    "@clerk/themes": "^2.4.6"
   },
   "devDependencies": {
     "turbo": "^2.5.4",
