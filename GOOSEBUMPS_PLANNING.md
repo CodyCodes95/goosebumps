@@ -233,6 +233,9 @@ Presenter UI specifics:
 - Status: Phase, timers, current round, number of answers in.
 - Moderation: kick player.
 
+Auth enforcement:
+- Use page-level guards on author routes (`/quizzes*`, `/present/*`) with Clerk; do not enforce auth in `layout.tsx`.
+
 Tailwind standards:
 - Layouts rely on `flex`, `grid` as needed; spacing with `gap-*`.
 - Shared components: buttons, cards, timers, progress bars; reuse existing `src/components/ui/*` where possible; bring in shadcn/ui components as needed to accelerate UI.
@@ -284,7 +287,7 @@ Animations & Presentation polish:
 ---
 
 ### Deployment
-- Frontend: Vercel (Next.js). Protect `/quizzes*` and `/present/*` with Clerk.
+- Frontend: Vercel (Next.js). Protect `/quizzes*` and `/present/*` with Clerk via page-level guards (not in layouts).
 - Backend: Convex Cloud. Store secrets (Gemini, Redis/Upstash) in Convex environment variables.
 - Domains: Nice join link `goosebumps.app/join/ABC123`.
 - CI: GitHub Actions with Turbo. Lint, type-check, run unit tests, then deploy.
@@ -302,42 +305,58 @@ Milestone 0 – Repo Hygiene (Day 0–0.5)
 - [ ] Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
 - [ ] Add `ENV` documentation and `.env.example` for web and Convex.
 
-Milestone 1 – Data & Auth Foundations (Day 1–2)
+Milestone 1 – Marketing Landing Page & Design System (Day 0.5–1.5)
+- [ ] `/` – public marketing landing page: hero, value props, features, CTA to sign in/create a quiz.
+- [ ] Establish design baseline: Tailwind theme tokens, typography scale, spacing rhythm; ensure use of `flex` and `gap` utilities.
+- [ ] SEO basics: title/description, social image, Open Graph tags.
+- [ ] Analytics hook (e.g., simple pageview) and basic lighthouse pass.
+- [ ] Styling & interaction review for `/`: ensure consistency and add tasteful motion (e.g., subtle hero reveal, button micro-interactions).
+
+Milestone 2 – Data & Auth Foundations (Day 1–2)
 - [ ] Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
 - [ ] Implement base queries: `listQuizzesForUser`, `getQuizLive`.
 - [ ] Implement mutations: `createQuiz`, `updateQuizConfig` (only in lobby).
-- [ ] Wire Clerk in Next.js layout; protect host routes; anonymous player routes open.
+- [ ] Wire Clerk; enforce auth at page-level on author routes (`/quizzes*`, `/present/*`); anonymous player routes open. Avoid layout-level auth.
 
-Milestone 2 – Quiz Dashboard & Creation (Day 2–3)
+Milestone 3 – Quiz Dashboard & Creation (Day 2–3)
 - [ ] `/quizzes`: list + create form (name, rounds, timers).
 - [ ] `/quizzes/[quizId]`: edit config; “Present” starts this quiz; redirect to `/present/[quizId]`.
+- [ ] Styling & interaction review for `/quizzes`: ensure Tailwind consistency; add tasteful micro-interactions (hover states, empty states, toasts).
+- [ ] Styling & interaction review for `/quizzes/[quizId]`: ensure form consistency, validation states, and subtle motion for save/feedback.
 
-Milestone 3 – Presenter View & Lobby (Day 3–4)
+Milestone 4 – Presenter View & Lobby (Day 3–4)
 - [ ] `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
-- [ ] `/join` and `/join/[joinCode]`: join flow creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
+- [ ] Styling & interaction review for `/present/[quizId]`: list animations for players joining/leaving; button feedback; accessibility.
+- [ ] `/join`: entry form to enter code; creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
+- [ ] Styling & interaction review for `/join`: form consistency; transitions between steps; clear error states.
+- [ ] `/join/[joinCode]`: prefilled code variant to enter name and join.
+- [ ] Styling & interaction review for `/join/[joinCode]`: ensure consistency with `/join`; tasteful motion.
 
-Milestone 4 – Prompting & AI Generation (Day 4–6)
+Milestone 5 – Prompting & AI Generation (Day 4–6)
 - [ ] Phase `prompting`: selected prompter sees prompt input; others see standby.
 - [ ] Mutation `submitPrompt` -> Action `generateAiAnswers` (Gemini via Vercel AI SDK with grounding tools and Redis cache) -> Mutation `advanceToAnswering` with `answerDeadlineAt`.
 - [ ] Handle AI errors (retry; or allow host skip to next round). If no prompt after 30s, auto-generate the full question + answers.
+- [ ] Styling & interaction review for `/play/[quizId]` prompting/standby screens: input focus states, subtle transitions between sub-states, accessible labels.
 
-Milestone 5 – Answering & Reveal (Day 6–7)
+Milestone 6 – Answering & Reveal (Day 6–7)
 - [ ] Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
 - [ ] When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
 - [ ] Reveal UI; then host `advancePhase` to `scoreboard`.
+- [ ] Styling & interaction review for `/play/[quizId]` answering & reveal: countdown animation polish, answer selection feedback, reveal transitions.
 
-Milestone 6 – Scoreboard & Next Rounds (Day 7–8)
+Milestone 7 – Scoreboard & Next Rounds (Day 7–8)
 - [ ] Leaderboard query; scoreboard UI.
 - [ ] Transition `scoreboard -> prompting` (next prompter); or `finished`.
+- [ ] Styling & interaction review for scoreboard: list entrance/exit animations, responsive layout, readable typography, color contrast.
 
-Milestone 7 – Polish & Edge Cases (Day 8–10)
+Milestone 8 – Polish & Edge Cases (Day 8–10)
 - [ ] Kicking players; rejoin handling; network resilience.
 - [ ] Input validation and name rules; no content moderation for MVP.
 - [ ] Presenter controls: skip, end, lock answers early.
 - [ ] Visual polish with Tailwind; mobile-optimized player screens.
 - [ ] Add tasteful animations (countdowns, transitions). Consider `framer-motion` for orchestrated transitions and progress animations.
 
-Milestone 8 – Testing, Analytics, and Launch (Day 10–12)
+Milestone 9 – Testing, Analytics, and Launch (Day 10–12)
 - [ ] Unit/integration/E2E with mocked AI.
 - [ ] Basic analytics + Sentry.
 - [ ] Load test with 100+ concurrent players.
