@@ -299,49 +299,49 @@ Dependencies and integration notes:
 ### Milestones & Detailed Tasks
 
 Milestone 0 – Repo Hygiene (Day 0–0.5)
-- Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
-- Add `ENV` documentation and `.env.example` for web and Convex.
+- [ ] Ensure environment setup docs in `README.md` (Convex, Clerk, OpenAI keys).
+- [ ] Add `ENV` documentation and `.env.example` for web and Convex.
 
 Milestone 1 – Data & Auth Foundations (Day 1–2)
-- Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
-- Implement base queries: `listQuizzesForUser`, `getQuizLive`.
-- Implement mutations: `createQuiz`, `updateQuizConfig` (only in lobby).
-- Wire Clerk in Next.js layout; protect host routes; anonymous player routes open.
+- [ ] Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
+- [ ] Implement base queries: `listQuizzesForUser`, `getQuizLive`.
+- [ ] Implement mutations: `createQuiz`, `updateQuizConfig` (only in lobby).
+- [ ] Wire Clerk in Next.js layout; protect host routes; anonymous player routes open.
 
 Milestone 2 – Quiz Dashboard & Creation (Day 2–3)
-- `/quizzes`: list + create form (name, rounds, timers).
-- `/quizzes/[quizId]`: edit config; “Present” starts this quiz; redirect to `/present/[quizId]`.
+- [ ] `/quizzes`: list + create form (name, rounds, timers).
+- [ ] `/quizzes/[quizId]`: edit config; “Present” starts this quiz; redirect to `/present/[quizId]`.
 
 Milestone 3 – Presenter View & Lobby (Day 3–4)
-- `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
-- `/join` and `/join/[joinCode]`: join flow creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
+- [ ] `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
+- [ ] `/join` and `/join/[joinCode]`: join flow creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
 
 Milestone 4 – Prompting & AI Generation (Day 4–6)
-- Phase `prompting`: selected prompter sees prompt input; others see standby.
-- Mutation `submitPrompt` -> Action `generateAiAnswers` (Gemini via Vercel AI SDK with grounding tools and Redis cache) -> Mutation `advanceToAnswering` with `answerDeadlineAt`.
-- Handle AI errors (retry; or allow host skip to next round). If no prompt after 30s, auto-generate the full question + answers.
+- [ ] Phase `prompting`: selected prompter sees prompt input; others see standby.
+- [ ] Mutation `submitPrompt` -> Action `generateAiAnswers` (Gemini via Vercel AI SDK with grounding tools and Redis cache) -> Mutation `advanceToAnswering` with `answerDeadlineAt`.
+- [ ] Handle AI errors (retry; or allow host skip to next round). If no prompt after 30s, auto-generate the full question + answers.
 
 Milestone 5 – Answering & Reveal (Day 6–7)
-- Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
-- When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
-- Reveal UI; then host `advancePhase` to `scoreboard`.
+- [ ] Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
+- [ ] When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
+- [ ] Reveal UI; then host `advancePhase` to `scoreboard`.
 
 Milestone 6 – Scoreboard & Next Rounds (Day 7–8)
-- Leaderboard query; scoreboard UI.
-- Transition `scoreboard -> prompting` (next prompter); or `finished`.
+- [ ] Leaderboard query; scoreboard UI.
+- [ ] Transition `scoreboard -> prompting` (next prompter); or `finished`.
 
 Milestone 7 – Polish & Edge Cases (Day 8–10)
-- Kicking players; rejoin handling; network resilience.
-- Input validation and name rules; no content moderation for MVP.
-- Presenter controls: skip, end, lock answers early.
-- Visual polish with Tailwind; mobile-optimized player screens.
-- Add tasteful animations (countdowns, transitions). Consider `framer-motion` for orchestrated transitions and progress animations.
+- [ ] Kicking players; rejoin handling; network resilience.
+- [ ] Input validation and name rules; no content moderation for MVP.
+- [ ] Presenter controls: skip, end, lock answers early.
+- [ ] Visual polish with Tailwind; mobile-optimized player screens.
+- [ ] Add tasteful animations (countdowns, transitions). Consider `framer-motion` for orchestrated transitions and progress animations.
 
 Milestone 8 – Testing, Analytics, and Launch (Day 10–12)
-- Unit/integration/E2E with mocked AI.
-- Basic analytics + Sentry.
-- Load test with 100+ concurrent players.
-- CI/CD to Vercel + Convex Cloud; set ENV; smoke tests.
+- [ ] Unit/integration/E2E with mocked AI.
+- [ ] Basic analytics + Sentry.
+- [ ] Load test with 100+ concurrent players.
+- [ ] CI/CD to Vercel + Convex Cloud; set ENV; smoke tests.
 
 ---
 
@@ -385,8 +385,8 @@ Milestone 8 – Testing, Analytics, and Launch (Day 10–12)
 ---
 
 ### Next Actions (Immediate)
-- Implement Convex schema for `quizzes`, `sessions`, `players`, `rounds`, `playerAnswers`.
-- Create host dashboard routes and base queries.
-- Create session, join flow, and basic presenter view with live player list.
+- [ ] Implement Convex schema for `quizzes`, `sessions`, `players`, `rounds`, `playerAnswers`.
+- [ ] Create host dashboard routes and base queries.
+- [ ] Create session, join flow, and basic presenter view with live player list.
 
 
