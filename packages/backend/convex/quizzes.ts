@@ -184,6 +184,32 @@ export const createQuiz = mutation({
 });
 
 /**
+ * Get a specific quiz by ID
+ */
+export const getQuiz = query({
+  args: { quizId: v.id("quizzes") },
+  handler: async (ctx, { quizId }) => {
+    // Get authenticated user's identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User must be authenticated to access quiz");
+    }
+
+    // Get quiz and verify ownership
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      return null;
+    }
+
+    if (quiz.authorId !== identity.subject) {
+      throw new Error("Quiz not found or access denied");
+    }
+
+    return quiz;
+  },
+});
+
+/**
  * Update quiz configuration (only allowed in lobby phase)
  */
 export const updateQuizConfig = mutation({
