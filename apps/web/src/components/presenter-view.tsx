@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
-import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import { api, type Id } from "@goosebumps/backend";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";

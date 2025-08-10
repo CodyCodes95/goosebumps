@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
+import { api } from "@goosebumps/backend";
 import { Button } from "@/components/ui/button";
 import {
   Card,

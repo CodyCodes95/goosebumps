@@ -9,7 +9,11 @@ jiti("./src/env");
 const nextConfig: NextConfig = {
   // Standalone output and transpile required packages for some deploy targets
   output: "standalone",
-  transpilePackages: ["@t3-oss/env-nextjs", "@t3-oss/env-core"],
+  transpilePackages: [
+    "@t3-oss/env-nextjs",
+    "@t3-oss/env-core",
+    "@goosebumps/backend",
+  ],
 };
 
 export default nextConfig;

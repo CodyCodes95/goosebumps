@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
+import { api } from "@goosebumps/backend";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,7 +28,7 @@ import {
   Copy,
   ArrowLeft,
 } from "lucide-react";
-import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import type { Id } from "@goosebumps/backend";
 
 type QuizDetailProps = {
   quizId: Id<"quizzes">;

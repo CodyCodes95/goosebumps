@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
-import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import { api, type Id } from "@goosebumps/backend";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import Loader from "./loader";

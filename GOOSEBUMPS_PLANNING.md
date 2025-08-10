@@ -325,12 +325,12 @@ Milestone 3 – Quiz Dashboard & Creation (Day 2–3)
 - [x] Styling & interaction review for `/quizzes/[quizId]`: ensure form consistency, validation states, and subtle motion for save/feedback.
 
 Milestone 4 – Presenter View & Lobby (Day 3–4)
-- [ ] `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
-- [ ] Styling & interaction review for `/present/[quizId]`: list animations for players joining/leaving; button feedback; accessibility.
-- [ ] `/join`: entry form to enter code; creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
-- [ ] Styling & interaction review for `/join`: form consistency; transitions between steps; clear error states.
+- [x] `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
+- [x] Styling & interaction review for `/present/[quizId]`: list animations for players joining/leaving; button feedback; accessibility.
+- [x] `/join`: entry form to enter code; creates `players` row with name + fingerprint; redirect to `/play/[quizId]`.
+- [x] Styling & interaction review for `/join`: form consistency; transitions between steps; clear error states.
 - [ ] `/join/[joinCode]`: prefilled code variant to enter name and join.
-- [ ] Styling & interaction review for `/join/[joinCode]`: ensure consistency with `/join`; tasteful motion.
+- [x] Styling & interaction review for `/join/[joinCode]`: ensure consistency with `/join`; tasteful motion.
 
 Milestone 5 – Prompting & AI Generation (Day 4–6)
 - [ ] Phase `prompting`: selected prompter sees prompt input; others see standby.
