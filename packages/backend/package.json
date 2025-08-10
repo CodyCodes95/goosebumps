@@ -2,8 +2,7 @@
   "name": "@goosebumps/backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "convex dev",
-    "dev:setup": "convex dev --configure --until-success"
+    "dev": "convex dev"
   },
   "author": "",
   "license": "ISC",
