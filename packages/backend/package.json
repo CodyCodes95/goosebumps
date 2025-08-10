@@ -4,8 +4,7 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "dev": "convex dev",
-    "build": "tsc --noEmit && convex codegen"
+    "dev": "convex dev"
   },
   "author": "",
   "license": "ISC",
