@@ -319,10 +319,10 @@ Milestone 2 – Data & Auth Foundations (Day 1–2)
 - [x] Wire Clerk; enforce auth at page-level on author routes (`/quizzes*`, `/present/*`); anonymous player routes open. Avoid layout-level auth.
 
 Milestone 3 – Quiz Dashboard & Creation (Day 2–3)
-- [ ] `/quizzes`: list + create form (name, rounds, timers).
-- [ ] `/quizzes/[quizId]`: edit config; “Present” starts this quiz; redirect to `/present/[quizId]`.
-- [ ] Styling & interaction review for `/quizzes`: ensure Tailwind consistency; add tasteful micro-interactions (hover states, empty states, toasts).
-- [ ] Styling & interaction review for `/quizzes/[quizId]`: ensure form consistency, validation states, and subtle motion for save/feedback.
+- [x] `/quizzes`: list + create form (name, rounds, timers).
+- [x] `/quizzes/[quizId]`: edit config; “Present” starts this quiz; redirect to `/present/[quizId]`.
+- [x] Styling & interaction review for `/quizzes`: ensure Tailwind consistency; add tasteful micro-interactions (hover states, empty states, toasts).
+- [x] Styling & interaction review for `/quizzes/[quizId]`: ensure form consistency, validation states, and subtle motion for save/feedback.
 
 Milestone 4 – Presenter View & Lobby (Day 3–4)
 - [ ] `/present/[quizId]`: show join code/slug; live player list; start button (host-only `startGame`).
