@@ -333,12 +333,12 @@ Milestone 4 – Presenter View & Lobby (Day 3–4)
 
 Milestone 5 – Prompting & AI Generation (Day 4–6)
 - [x] Phase `prompting`: selected prompter sees prompt input; others see standby.
-- [x] Mutation `submitPrompt` -> Action `generateAiAnswers` (Gemini via Vercel AI SDK with grounding tools and Redis cache) -> Mutation `advanceToAnswering` with `answerDeadlineAt`.
-- [ ] Handle AI errors (retry; or allow host skip to next round). If no prompt after 30s, auto-generate the full question + answers.
-- [ ] Styling & interaction review for `/play/[quizId]` prompting/standby screens: input focus states, subtle transitions between sub-states, accessible labels.
+- [!] Mutation `submitPrompt` -> Action `generateAiAnswers` (Gemini via Vercel AI SDK with grounding tools and Redis cache) -> Mutation `advanceToAnswering` with `answerDeadlineAt`.
+- [!] Handle AI errors (retry; or allow host skip to next round). If no prompt after 30s, auto-generate the full question + answers.
+- [x] Styling & interaction review for `/play/[quizId]` prompting/standby screens: input focus states, subtle transitions between sub-states, accessible labels.
 
 Milestone 6 – Answering & Reveal (Day 6–7)
-- [ ] Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
+- [] Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
 - [ ] When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
 - [ ] Reveal UI; then host `advancePhase` to `scoreboard`.
 - [ ] Styling & interaction review for `/play/[quizId]` answering & reveal: countdown animation polish, answer selection feedback, reveal transitions.
