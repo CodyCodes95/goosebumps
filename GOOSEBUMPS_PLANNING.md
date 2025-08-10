@@ -338,10 +338,10 @@ Milestone 5 – Prompting & AI Generation (Day 4–6)
 - [x] Styling & interaction review for `/play/[quizId]` prompting/standby screens: input focus states, subtle transitions between sub-states, accessible labels.
 
 Milestone 6 – Answering & Reveal (Day 6–7)
-- [] Player answering UI with countdown; `submitAnswer` mutation; show “Answer locked” after submit.
-- [ ] When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
-- [ ] Reveal UI; then host `advancePhase` to `scoreboard`.
-- [ ] Styling & interaction review for `/play/[quizId]` answering & reveal: countdown animation polish, answer selection feedback, reveal transitions.
+- [x] Player answering UI with countdown; `submitAnswer` mutation; show "Answer locked" after submit.
+- [x] When all answered or deadline passes: `lockAnswers` -> compute correctness + score -> `reveal`.
+- [x] Reveal UI; then host `advancePhase` to `scoreboard`.
+- [x] Styling & interaction review for `/play/[quizId]` answering & reveal: countdown animation polish, answer selection feedback, reveal transitions.
 
 Milestone 7 – Scoreboard & Next Rounds (Day 7–8)
 - [ ] Leaderboard query; scoreboard UI.
