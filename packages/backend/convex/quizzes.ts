@@ -210,6 +210,30 @@ export const getQuiz = query({
 });
 
 /**
+ * Get basic public quiz information by ID (no auth required)
+ * Used by players to get join code and basic quiz info
+ */
+export const getQuizPublic = query({
+  args: { quizId: v.id("quizzes") },
+  handler: async (ctx, { quizId }) => {
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      return null;
+    }
+
+    // Return only public information that players need
+    return {
+      _id: quiz._id,
+      name: quiz.name,
+      joinCode: quiz.joinCode,
+      phase: quiz.phase,
+      currentRoundIndex: quiz.currentRoundIndex,
+      config: quiz.config,
+    };
+  },
+});
+
+/**
  * Update quiz configuration (only allowed in lobby phase)
  */
 export const updateQuizConfig = mutation({

@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../../packages/backend/convex/_generated/api";
-import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import Loader from "./loader";
@@ -26,8 +26,8 @@ export function PlayerView({ quizId }: PlayerViewProps) {
     setDeviceFingerprint(getDeviceFingerprint());
   }, []);
 
-  // Get quiz data by ID first to get the join code
-  const quiz = useQuery(api.quizzes.getQuiz, {
+  // Get public quiz data by ID first to get the join code
+  const quiz = useQuery(api.quizzes.getQuizPublic, {
     quizId: quizId as Id<"quizzes">,
   });
 

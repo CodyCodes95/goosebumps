@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../packages/backend/convex/_generated/api";
-import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import type { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
