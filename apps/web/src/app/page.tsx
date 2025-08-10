@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 export default function Home() {
   return (
@@ -18,7 +17,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-12 animate-fade-in-up [animation-delay:0.4s]">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center animate-fade-in-up [animation-delay:0.4s]">
             <Button
               asChild
               size="lg"
@@ -34,44 +33,6 @@ export default function Home() {
             >
               <Link href="/join">Join Game</Link>
             </Button>
-          </div>
-
-          {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mt-16">
-            <Card className="p-6 text-center transition-all hover:shadow-lg hover:-translate-y-1 animate-fade-in-up [animation-delay:0.6s]">
-              <div className="text-3xl mb-4 animate-bounce-subtle">🎯</div>
-              <h3 className="text-lg font-semibold mb-2">
-                Player-Driven Questions
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Participants submit their own questions, making each game unique
-                and engaging.
-              </p>
-            </Card>
-
-            <Card className="p-6 text-center transition-all hover:shadow-lg hover:-translate-y-1 animate-fade-in-up [animation-delay:0.8s]">
-              <div className="text-3xl mb-4 animate-bounce-subtle [animation-delay:0.2s]">
-                🤖
-              </div>
-              <h3 className="text-lg font-semibold mb-2">
-                AI-Generated Answers
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Smart AI creates plausible multiple-choice answers for any
-                question topic.
-              </p>
-            </Card>
-
-            <Card className="p-6 text-center transition-all hover:shadow-lg hover:-translate-y-1 animate-fade-in-up [animation-delay:1s]">
-              <div className="text-3xl mb-4 animate-bounce-subtle [animation-delay:0.4s]">
-                ⚡
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Real-Time Fun</h3>
-              <p className="text-sm text-muted-foreground">
-                Live scoring, instant feedback, and seamless multiplayer
-                experience.
-              </p>
-            </Card>
           </div>
         </div>
       </section>

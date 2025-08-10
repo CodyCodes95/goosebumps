@@ -8,9 +8,9 @@ export default function Header() {
     <header className="border-b">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold">
-          📚 Goosebumps
+          Goosebumps
         </Link>
-        
+
         <nav className="flex items-center">
           <UserMenu />
         </nav>
