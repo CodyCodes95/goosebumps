@@ -13,7 +13,6 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as env from "../env.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as quizzes from "../quizzes.js";
 
@@ -26,7 +25,6 @@ import type * as quizzes from "../quizzes.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  env: typeof env;
   healthCheck: typeof healthCheck;
   quizzes: typeof quizzes;
 }>;

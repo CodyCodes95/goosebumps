@@ -8,8 +8,6 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
-import { env } from "./env";
-import { google } from "@ai-sdk/google";
 
 /**
  * List all quizzes owned by the current authenticated user
