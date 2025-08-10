@@ -350,7 +350,6 @@ Milestone 7 – Scoreboard & Next Rounds (Day 7–8)
 
 Milestone 8 – Polish & Edge Cases (Day 8–10)
 - [ ] Kicking players; rejoin handling; network resilience.
-- [ ] Input validation and name rules; no content moderation for MVP.
 - [ ] Presenter controls: skip, end, lock answers early.
 - [ ] Visual polish with Tailwind; mobile-optimized player screens.
 - [ ] Add tasteful animations (countdowns, transitions). Consider `framer-motion` for orchestrated transitions and progress animations.
