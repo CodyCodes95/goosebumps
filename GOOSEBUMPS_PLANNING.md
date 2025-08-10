@@ -313,10 +313,10 @@ Milestone 1 – Landing Page & Design System (Day 0.5–1.5)
 - [x] Styling & interaction review for `/`: ensure consistency and add tasteful motion (e.g., subtle hero reveal, button micro-interactions).
 
 Milestone 2 – Data & Auth Foundations (Day 1–2)
-- [ ] Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
-- [ ] Implement base queries: `listQuizzesForUser`, `getQuizLive`.
-- [ ] Implement mutations: `createQuiz`, `updateQuizConfig` (only in lobby).
-- [ ] Wire Clerk; enforce auth at page-level on author routes (`/quizzes*`, `/present/*`); anonymous player routes open. Avoid layout-level auth.
+- [x] Extend Convex `schema.ts` with `quizzes`, `players`, `rounds`, `playerAnswers` (single-run quizzes; no sessions).
+- [x] Implement base queries: `listQuizzesForUser`, `getQuizLive`.
+- [x] Implement mutations: `createQuiz`, `updateQuizConfig` (only in lobby).
+- [x] Wire Clerk; enforce auth at page-level on author routes (`/quizzes*`, `/present/*`); anonymous player routes open. Avoid layout-level auth.
 
 Milestone 3 – Quiz Dashboard & Creation (Day 2–3)
 - [ ] `/quizzes`: list + create form (name, rounds, timers).
