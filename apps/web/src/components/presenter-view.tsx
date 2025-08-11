@@ -6,7 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import Loader, { LoaderContainer } from "./loader";
-import { Copy, Play, Users, Clock, Settings } from "lucide-react";
+import {
+  Copy,
+  Play,
+  Users,
+  Clock,
+  Settings,
+  Ban,
+  SkipForward,
+  Flag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import usePresence from "@convex-dev/presence/react";
@@ -45,6 +54,9 @@ export function PresenterView({ quizId }: PresenterViewProps) {
   const startGame = useMutation(api.quizzes.startGame);
   const lockAnswers = useMutation(api.quizzes.lockAnswers);
   const advancePhase = useMutation(api.quizzes.advancePhase);
+  const kickPlayer = useMutation(api.quizzes.kickPlayer);
+  const endQuiz = useMutation(api.quizzes.endQuiz);
+  const skipRound = useMutation(api.quizzes.skipRound);
 
   if (quiz === undefined || liveData === undefined) {
     return <LoaderContainer />;
@@ -278,6 +290,55 @@ export function PresenterView({ quizId }: PresenterViewProps) {
                 )}
               </Button>
             )}
+
+            {/* Presenter extra controls */}
+            {quiz.phase !== "finished" && (
+              <div className="flex flex-col gap-2">
+                {(quiz.phase === "prompting" ||
+                  quiz.phase === "generating" ||
+                  quiz.phase === "answering") && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        await skipRound({ quizId: quiz._id });
+                        toast.success("Round skipped. Moving to reveal.");
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error
+                            ? error.message
+                            : "Failed to skip round"
+                        );
+                      }
+                    }}
+                  >
+                    <SkipForward className="w-4 h-4 mr-2" />
+                    Skip Current Round
+                  </Button>
+                )}
+
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      await endQuiz({ quizId: quiz._id });
+                      toast.success("Quiz ended");
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Failed to end quiz"
+                      );
+                    }
+                  }}
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  End Quiz
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -349,6 +410,28 @@ export function PresenterView({ quizId }: PresenterViewProps) {
                         </p>
                       )}
                     </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={async () => {
+                        try {
+                          await kickPlayer({
+                            quizId: quiz._id,
+                            playerId: player._id,
+                          });
+                          toast.success(`Kicked ${player.name}`);
+                        } catch (error) {
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : "Failed to kick player"
+                          );
+                        }
+                      }}
+                      className="ml-auto"
+                    >
+                      <Ban className="w-3 h-3 mr-1" /> Kick
+                    </Button>
                   </div>
                 ))}
               </div>

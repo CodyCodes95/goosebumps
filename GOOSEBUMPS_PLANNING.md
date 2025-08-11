@@ -349,9 +349,9 @@ Milestone 7 – Scoreboard & Next Rounds (Day 7–8)
 - [x] Styling & interaction review for scoreboard: list entrance/exit animations, responsive layout, readable typography, color contrast.
 
 Milestone 8 – Polish & Edge Cases (Day 8–10)
-- [ ] Kicking players; rejoin handling; network resilience.
-- [ ] Presenter controls: skip, end, lock answers early.
-- [ ] Visual polish with Tailwind; mobile-optimized player screens.
+- [x] Kicking players; rejoin handling; network resilience.
+- [x] Presenter controls: skip, end, lock answers early.
+- [x] Visual polish with Tailwind; mobile-optimized player screens.
 - [ ] Add tasteful animations (countdowns, transitions). Consider `framer-motion` for orchestrated transitions and progress animations.
 
 Milestone 9 – Testing, Analytics, and Launch (Day 10–12)

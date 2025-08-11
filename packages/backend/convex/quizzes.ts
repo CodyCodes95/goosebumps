@@ -288,7 +288,24 @@ export const joinQuiz = mutation({
       throw new Error("Quiz not found");
     }
 
-    // Verify quiz is in lobby phase (can only join in lobby)
+    // Rejoin handling: if device already has a player in this quiz and not kicked,
+    // return that player, regardless of quiz phase.
+    const existingPlayerWithFingerprint = await ctx.db
+      .query("players")
+      .withIndex("byQuiz", (q) => q.eq("quizId", quiz._id))
+      .filter((q) => q.eq(q.field("deviceFingerprint"), deviceFingerprint))
+      .filter((q) => q.eq(q.field("kickedAt"), undefined))
+      .first();
+
+    if (existingPlayerWithFingerprint) {
+      // Update lastSeenAt on rejoin
+      await ctx.db.patch(existingPlayerWithFingerprint._id, {
+        lastSeenAt: Date.now(),
+      });
+      return { playerId: existingPlayerWithFingerprint._id, quizId: quiz._id };
+    }
+
+    // If no existing player, only allow creating a new one in lobby
     if (quiz.phase !== "lobby") {
       throw new Error("Quiz has already started or finished");
     }
@@ -310,15 +327,15 @@ export const joinQuiz = mutation({
       throw new Error("Name already taken in this quiz");
     }
 
-    // Check if device fingerprint already has a player in this quiz
-    const existingPlayerWithFingerprint = await ctx.db
+    // Device fingerprint uniqueness for new players (no duplicate creates in lobby)
+    const duplicateFingerprint = await ctx.db
       .query("players")
       .withIndex("byQuiz", (q) => q.eq("quizId", quiz._id))
       .filter((q) => q.eq(q.field("deviceFingerprint"), deviceFingerprint))
       .filter((q) => q.eq(q.field("kickedAt"), undefined))
       .first();
 
-    if (existingPlayerWithFingerprint) {
+    if (duplicateFingerprint) {
       throw new Error("Device already has a player in this quiz");
     }
 
@@ -347,6 +364,118 @@ export const joinQuiz = mutation({
     });
 
     return { playerId, quizId: quiz._id };
+  },
+});
+
+/**
+ * Kick a player from the quiz (host-only)
+ */
+export const kickPlayer = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+    playerId: v.id("players"),
+  },
+  handler: async (ctx, { quizId, playerId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User must be authenticated");
+    }
+
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+    if (quiz.authorId !== identity.subject) {
+      throw new Error("Only quiz author can kick players");
+    }
+
+    const player = await ctx.db.get(playerId);
+    if (!player || player.quizId !== quizId) {
+      throw new Error("Player not found in this quiz");
+    }
+    if (player.isHost) {
+      throw new Error("Cannot kick the host");
+    }
+
+    await ctx.db.patch(playerId, { kickedAt: Date.now() });
+    return { success: true };
+  },
+});
+
+/**
+ * End the quiz immediately (host-only)
+ */
+export const endQuiz = mutation({
+  args: { quizId: v.id("quizzes") },
+  handler: async (ctx, { quizId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("User must be authenticated");
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) throw new Error("Quiz not found");
+    if (quiz.authorId !== identity.subject)
+      throw new Error("Only quiz author can end quiz");
+
+    await ctx.db.patch(quizId, {
+      phase: "finished",
+      answerDeadlineAt: undefined,
+      promptDeadlineAt: undefined,
+      updatedAt: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+/**
+ * Skip the current round (host-only)
+ * - If answering: auto-lock answers and move to reveal
+ * - If prompting/generating: mark round completed and move to reveal
+ */
+export const skipRound = mutation({
+  args: { quizId: v.id("quizzes") },
+  handler: async (ctx, { quizId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("User must be authenticated");
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) throw new Error("Quiz not found");
+    if (quiz.authorId !== identity.subject)
+      throw new Error("Only quiz author can skip rounds");
+
+    if (quiz.phase === "finished" || quiz.phase === "scoreboard") {
+      return { skipped: false };
+    }
+
+    // Get current round
+    const currentRound = await ctx.db
+      .query("rounds")
+      .withIndex("byQuizIndex", (q) =>
+        q.eq("quizId", quizId).eq("roundIndex", quiz.currentRoundIndex)
+      )
+      .unique();
+    if (!currentRound) throw new Error("No active round to skip");
+
+    const now = Date.now();
+
+    if (quiz.phase === "answering") {
+      // Use existing internal mutation to finalize missing answers and move to reveal
+      await ctx.scheduler.runAfter(
+        0,
+        internal.quizzes.autoLockAnswersInternal,
+        {
+          quizId,
+          roundId: currentRound._id,
+        }
+      );
+      return { success: true, nextPhase: "reveal" };
+    }
+
+    // prompting or generating
+    await ctx.db.patch(currentRound._id, { completedAt: now });
+    await ctx.db.patch(quizId, {
+      phase: "reveal",
+      promptDeadlineAt: undefined,
+      updatedAt: now,
+    });
+    return { success: true, nextPhase: "reveal" };
   },
 });
 

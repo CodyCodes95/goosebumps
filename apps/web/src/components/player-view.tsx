@@ -50,9 +50,10 @@ export function PlayerView({ quizId }: PlayerViewProps) {
   });
 
   // Get live quiz data with players
-  const liveData = useQuery(api.quizzes.getQuizLive, {
-    joinCode: quiz?.joinCode || "",
-  });
+  const liveData = useQuery(
+    api.quizzes.getQuizLive,
+    quiz?.joinCode ? { joinCode: quiz.joinCode } : "skip"
+  );
 
   // Get leaderboard for scoreboard phase (only when quiz is loaded)
   const leaderboard = useQuery(
@@ -177,7 +178,7 @@ export function PlayerView({ quizId }: PlayerViewProps) {
     }
   };
 
-  if (quiz === undefined || liveData === undefined || !deviceFingerprint) {
+  if (quiz === undefined || liveData === undefined) {
     return (
       <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto">
         <LoaderContainer />
