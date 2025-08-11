@@ -17,7 +17,8 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import usePresence from "@convex-dev/presence/react";
 import { toast } from "sonner";
 
 type PlayerViewProps = {
@@ -53,10 +54,20 @@ export function PlayerView({ quizId }: PlayerViewProps) {
     joinCode: quiz?.joinCode || "",
   });
 
-  // Get leaderboard for scoreboard phase
-  const leaderboard = useQuery(api.quizzes.getLeaderboard, {
-    quizId: quiz?._id as Id<"quizzes">,
-  });
+  // Get leaderboard for scoreboard phase (only when quiz is loaded)
+  const leaderboard = useQuery(
+    api.quizzes.getLeaderboard,
+    quiz?._id ? { quizId: quiz._id as Id<"quizzes"> } : "skip"
+  );
+
+  // Presence heartbeat (unconditional to preserve hook order)
+  const roomId = (quiz?._id as unknown as string) ?? "";
+  const presenceDisplayName =
+    liveData?.players?.find(
+      (p) => p.deviceFingerprint === deviceFingerprint && !p.isHost
+    )?.name || "Player";
+  const presenceState =
+    usePresence(api.presence, roomId, presenceDisplayName) ?? [];
 
   // Reset answer state when round changes
   useEffect(() => {
@@ -218,6 +229,8 @@ export function PlayerView({ quizId }: PlayerViewProps) {
   }
 
   const nonHostPlayers = players.filter((p) => !p.isHost);
+
+  const onlineCount = presenceState.length;
 
   // Check if current player is the selected prompter
   const isPrompter = liveData?.currentRound?.prompterPlayerId === myPlayer?._id;
@@ -727,6 +740,9 @@ export function PlayerView({ quizId }: PlayerViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="text-xs text-muted-foreground mb-2">
+              Online now: {onlineCount}
+            </div>
             {nonHostPlayers.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 No other players yet...

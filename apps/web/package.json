@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port=3001",
-      "build": "next build --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@convex-dev/presence": "^0.1.5",
     "@goosebumps/backend": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-form": "^1.12.3",

@@ -8,7 +8,8 @@ import { Badge } from "./ui/badge";
 import Loader, { LoaderContainer } from "./loader";
 import { Copy, Play, Users, Clock, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import usePresence from "@convex-dev/presence/react";
 
 type PresenterViewProps = {
   quizId: string;
@@ -33,6 +34,12 @@ export function PresenterView({ quizId }: PresenterViewProps) {
   const leaderboard = useQuery(api.quizzes.getLeaderboard, {
     quizId: quiz?._id as Id<"quizzes">,
   });
+
+  // Presence heartbeat for presenter (host)
+  // const roomId = quiz?._id as unknown as string | undefined;
+  // const presenterName = useMemo(() => "Host", []);
+  // const presenceState =
+  //   usePresence(api.presence, roomId ?? "", presenterName) ?? [];
 
   // Mutations
   const startGame = useMutation(api.quizzes.startGame);
