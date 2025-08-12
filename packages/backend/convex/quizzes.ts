@@ -614,7 +614,24 @@ export const submitPrompt = mutation({
 });
 
 /**
- * Generate AI answers using Gemini
+ * System context for storing tool call results and state between agent steps
+ */
+type SystemContext = {
+  searchResults: Array<{
+    query: string;
+    results: Array<{
+      title: string;
+      url: string;
+      snippet: string;
+    }>;
+  }>;
+  stepCount: number;
+  maxSteps: number;
+  promptText: string;
+};
+
+/**
+ * Generate AI answers using enhanced agent loop with search capability
  * Internal action called after prompt submission
  */
 // Define Zod schema for trivia question structure
@@ -625,6 +642,18 @@ const triviaQuestionSchema = z.object({
     .array(z.string())
     .length(3)
     .describe("Three incorrect but plausible answers"),
+});
+
+// Define schema for next action decision
+const nextActionSchema = z.object({
+  action: z
+    .enum(["google-search", "generate-object"])
+    .describe("The next action to take"),
+  reasoning: z.string().describe("Why this action was chosen"),
+  searchQuery: z
+    .string()
+    .optional()
+    .describe("Search query if action is google-search"),
 });
 
 export const generateAiAnswers = internalAction({
@@ -640,20 +669,154 @@ export const generateAiAnswers = internalAction({
         apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
       });
 
-      // Call Gemini API with structured output
+      // Initialize system context
+      const context: SystemContext = {
+        searchResults: [],
+        stepCount: 0,
+        maxSteps: 10,
+        promptText,
+      };
+
+      // Agent loop
+      while (context.stepCount < context.maxSteps) {
+        context.stepCount++;
+
+        // Determine next action
+        const { object: actionDecision } = await generateObject({
+          model: google("gemini-2.0-flash"),
+          system: `You are a trivia question generator agent. Your job is to decide whether you can confidently create a trivia question based on the given prompt, or if you need to search for more current information first.
+
+Current context:
+- Step ${context.stepCount}/${context.maxSteps}
+- Previous search results: ${JSON.stringify(context.searchResults, null, 2)}
+
+Decision criteria:
+- Choose "generate-object" if you have sufficient knowledge or if previous searches provided enough information
+- Choose "google-search" if the topic requires current/recent information that you might not have (e.g., current events, recent developments, specific recent dates, latest statistics)
+- If you've already searched and have relevant results, choose "generate-object"
+
+Examples of topics that need search:
+- "2024 Olympics winners"
+- "Current president of [country]"  
+- "Latest iPhone features"
+- "Recent scientific discoveries"
+- "Current stock prices"
+
+Examples of topics that don't need search:
+- "World War 2 facts"
+- "Basic math concepts"
+- "Classical literature"
+- "Historical events before 2020"
+- "General science concepts"`,
+          prompt: `Analyze this trivia prompt and decide the next action: "${context.promptText}"
+
+Consider:
+1. Does this topic require current/recent information?
+2. Do I have sufficient knowledge to create accurate questions?
+3. Have I already searched and found relevant information?
+
+Make your decision:`,
+          schema: nextActionSchema,
+          temperature: 0.3,
+        });
+
+        if (actionDecision.action === "google-search") {
+          // Perform Google search
+          if (!actionDecision.searchQuery) {
+            throw new Error(
+              "Search query is required for google-search action"
+            );
+          }
+
+          try {
+            // Use a simple web search API (you'll need to implement this with your preferred search provider)
+            const searchResults = await performWebSearch(
+              actionDecision.searchQuery
+            );
+
+            context.searchResults.push({
+              query: actionDecision.searchQuery,
+              results: searchResults,
+            });
+
+            console.log(
+              `Step ${context.stepCount}: Searched for "${actionDecision.searchQuery}", found ${searchResults.length} results`
+            );
+          } catch (searchError) {
+            console.error("Search failed:", searchError);
+            // Continue with generation if search fails
+            break;
+          }
+        } else if (actionDecision.action === "generate-object") {
+          // Generate trivia question
+          const searchContext =
+            context.searchResults.length > 0
+              ? `\n\nAdditional context from web search:\n${context.searchResults
+                  .map((sr) =>
+                    sr.results.map((r) => `${r.title}: ${r.snippet}`).join("\n")
+                  )
+                  .join("\n\n")}`
+              : "";
+
+          const { object: aiResponse } = await generateObject({
+            model: google("gemini-2.0-flash"),
+            system: `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
+
+Rules:
+- Generate factually accurate questions using the most current information available
+- Make distractors plausible but incorrect
+- Keep questions and answers concise
+- Use any provided search context to ensure accuracy${searchContext}`,
+            prompt: `Create a trivia question based on this prompt: "${context.promptText}"`,
+            schema: triviaQuestionSchema,
+            temperature: 0.7,
+          });
+
+          // Create shuffled options with unique IDs
+          const allOptions = [
+            { id: "correct", text: aiResponse.correct, isCorrect: true },
+            ...aiResponse.distractors.map((text: string, index: number) => ({
+              id: `distractor_${index + 1}`,
+              text,
+              isCorrect: false,
+            })),
+          ];
+
+          // Shuffle options
+          for (let i = allOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+          }
+
+          // Store the generated options in the round
+          await ctx.runMutation(internal.quizzes.advanceToAnswering, {
+            quizId,
+            roundId,
+            aiAnswerOptions: allOptions,
+            question: aiResponse.question,
+          });
+
+          console.log(
+            `Step ${context.stepCount}: Generated trivia question successfully`
+          );
+          return; // Exit the loop successfully
+        }
+      }
+
+      // If we reach here, we've hit max steps without generating - fallback to simple generation
+      console.log("Max steps reached, falling back to simple generation");
+
       const { object: aiResponse } = await generateObject({
         model: google("gemini-2.0-flash"),
         system: `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
 
 Rules:
 - Generate factually accurate questions
-- Make distractors plausible but clearly wrong
-- Keep questions and answers concise
-- Avoid controversial topics`,
-        prompt: `Create a trivia question based on this prompt: "${promptText}"`,
+- Make distractors plausible but incorrect  
+- Keep questions and answers concise`,
+        prompt: `Create a trivia question based on this prompt: "${context.promptText}"`,
         schema: triviaQuestionSchema,
         temperature: 0.7,
-        maxOutputTokens: 500,
       });
 
       // Create shuffled options with unique IDs
@@ -692,6 +855,134 @@ Rules:
     }
   },
 });
+
+/**
+ * Serper API types and interfaces
+ */
+declare namespace SerperTool {
+  export type SearchInput = {
+    q: string;
+    num: number;
+  };
+
+  export interface SearchParameters {
+    q: string;
+    type: string;
+    engine: string;
+  }
+
+  export interface KnowledgeGraph {
+    title: string;
+    type: string;
+    rating?: number;
+    ratingCount?: number;
+    imageUrl?: string;
+    attributes?: Record<string, string>;
+  }
+
+  export interface Sitelink {
+    title: string;
+    link: string;
+  }
+
+  export interface OrganicResult {
+    title: string;
+    link: string;
+    snippet: string;
+    sitelinks?: Sitelink[];
+    position: number;
+    date?: string;
+  }
+
+  export interface PeopleAlsoAskResult {
+    question: string;
+    snippet: string;
+    title: string;
+    link: string;
+  }
+
+  export interface RelatedSearch {
+    query: string;
+  }
+
+  export interface SearchResult {
+    searchParameters: SearchParameters;
+    knowledgeGraph?: KnowledgeGraph;
+    organic: OrganicResult[];
+    peopleAlsoAsk?: PeopleAlsoAskResult[];
+    relatedSearches?: RelatedSearch[];
+    credits: number;
+  }
+}
+
+/**
+ * Fetch from Serper API
+ */
+async function fetchFromSerper(
+  url: string,
+  options: Omit<RequestInit, "headers">
+): Promise<SerperTool.SearchResult> {
+  const SERPER_API_KEY = process.env.SERPER_API_KEY;
+
+  const response = await fetch(`https://google.serper.dev${url}`, {
+    ...options,
+    headers: {
+      "X-API-KEY": SERPER_API_KEY!,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Serper API error: ${response.status} ${errorText}`);
+  }
+
+  const json = await response.json();
+  return json;
+}
+
+/**
+ * Search using Serper API
+ */
+async function searchSerper(body: SerperTool.SearchInput) {
+  const results = await fetchFromSerper("/search", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  return results;
+}
+
+/**
+ * Perform web search using Serper API
+ */
+async function performWebSearch(query: string): Promise<
+  Array<{
+    title: string;
+    url: string;
+    snippet: string;
+  }>
+> {
+  console.log(`Performing web search for: ${query}`);
+
+  const searchResults = await searchSerper({
+    q: query,
+    num: 3, // Limit to 3 results to manage API costs
+  });
+
+  // Extract organic search results
+  const results =
+    searchResults.organic?.map((result) => ({
+      title: result.title || "No title",
+      url: result.link || "",
+      snippet: result.snippet || "No snippet available",
+    })) || [];
+
+  console.log(`Found ${results.length} search results for query: ${query}`);
+  console.log(`API credits used: ${searchResults.credits}`);
+
+  return results;
+}
 
 /**
  * Internal mutation to advance to answering phase after AI generation
