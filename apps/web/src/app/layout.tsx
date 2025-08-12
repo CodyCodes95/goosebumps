@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Create engaging quiz experiences where players submit questions and AI generates answers. Like Kahoot meets AI-powered trivia for groups, classrooms, and events.",
   keywords:
     "quiz, trivia, interactive, AI, multiplayer, game, education, classroom, group activity",
-  authors: [{ name: "Goosebumps Team" }],
+  authors: [{ name: "Cody" }],
   openGraph: {
     title: "Goosebumps - Interactive Quiz Game Platform",
     description:
