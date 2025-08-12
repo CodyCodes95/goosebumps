@@ -19,12 +19,19 @@ import {
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import usePresence from "@convex-dev/presence/react";
+import { GamePresenterView } from "./game/presenter-view";
 
 type PresenterViewProps = {
   quizId: string;
 };
 
 export function PresenterView({ quizId }: PresenterViewProps) {
+  // Use the new gamey presenter view
+  return <GamePresenterView quizId={quizId} />;
+}
+
+// Legacy presenter view - keeping for reference but not used
+function LegacyPresenterView({ quizId }: PresenterViewProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [isLockingAnswers, setIsLockingAnswers] = useState(false);
   const [isAdvancingPhase, setIsAdvancingPhase] = useState(false);

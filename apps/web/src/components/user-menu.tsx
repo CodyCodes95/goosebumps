@@ -143,7 +143,7 @@ export function UserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Theme
           </DropdownMenuSubTrigger>

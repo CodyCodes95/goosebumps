@@ -2,6 +2,8 @@
 
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ThemeProvider } from "./theme-provider";
+import { MotionProvider } from "./motion-provider";
+import { AudioProvider } from "./game/audio-manager";
 import { Toaster } from "./ui/sonner";
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -13,16 +15,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
+      defaultTheme="dark"
+      enableSystem={false}
+      disableTransitionOnChange={false}
     >
-      <ClerkProvider>
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          {children}
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-      <Toaster richColors />
+      <MotionProvider>
+        <AudioProvider>
+          <ClerkProvider>
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+              {children}
+            </ConvexProviderWithClerk>
+          </ClerkProvider>
+          <Toaster richColors />
+        </AudioProvider>
+      </MotionProvider>
     </ThemeProvider>
   );
 }

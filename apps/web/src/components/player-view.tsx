@@ -20,6 +20,7 @@ import {
 import { useEffect, useState, useCallback, useMemo } from "react";
 import usePresence from "@convex-dev/presence/react";
 import { toast } from "sonner";
+import { GamePlayerView } from "./game/player-view";
 
 type PlayerViewProps = {
   quizId: string;
@@ -31,6 +32,12 @@ function getDeviceFingerprint(): string {
 }
 
 export function PlayerView({ quizId }: PlayerViewProps) {
+  // Use the new gamey player view
+  return <GamePlayerView quizId={quizId} />;
+}
+
+// Legacy player view - keeping for reference but not used
+function LegacyPlayerView({ quizId }: PlayerViewProps) {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [promptText, setPromptText] = useState("");
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
