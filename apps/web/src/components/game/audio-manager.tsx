@@ -80,7 +80,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
       setConfig((prev) => ({ ...prev, sounds }));
     }
-  }, [config.volume]);
+  }, []); // Remove config.volume dependency to prevent infinite loop
+
+  // Update volume for all loaded sounds when volume changes
+  useEffect(() => {
+    Object.values(config.sounds).forEach((sound) => {
+      if (sound) {
+        sound.volume = config.volume;
+      }
+    });
+  }, [config.volume, config.sounds]);
 
   // Wait for user interaction before allowing sounds
   useEffect(() => {
@@ -136,20 +145,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setConfig((prev) => ({ ...prev, enabled }));
   }, []);
 
-  const setVolume = useCallback(
-    (volume: number) => {
-      const clampedVolume = Math.max(0, Math.min(1, volume));
-      setConfig((prev) => ({ ...prev, volume: clampedVolume }));
-
-      // Update volume for all loaded sounds
-      Object.values(config.sounds).forEach((sound) => {
-        if (sound) {
-          sound.volume = clampedVolume;
-        }
-      });
-    },
-    [config.sounds]
-  );
+  const setVolume = useCallback((volume: number) => {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    setConfig((prev) => ({ ...prev, volume: clampedVolume }));
+    // Volume update for sounds is now handled by useEffect
+  }, []);
 
   const contextValue: AudioContextType = {
     playSound,

@@ -93,6 +93,7 @@ export function Countdown({
             : {}
         }
         transition={{
+          type: "tween",
           duration: gameAnimations.countdownDuration / 1000,
           ease: "easeInOut",
           repeat: Infinity,
@@ -115,16 +116,23 @@ export function Countdown({
             rotateY: -90,
           }}
           animate={{
-            scale: [0, 1.2, 1],
+            scale: 1,
             opacity: 1,
             rotateY: 0,
           }}
           exit={{
-            scale: [1, 1.2, 0],
+            scale: 0,
             opacity: 0,
             rotateY: 90,
           }}
-          transition={transition}
+          transition={{
+            ...transition,
+            scale: {
+              type: "tween",
+              duration: 0.6,
+              ease: [0.34, 1.56, 0.64, 1], // Custom easing for bounce effect
+            },
+          }}
         >
           {currentNumber}
         </motion.div>
@@ -233,6 +241,7 @@ export function TimerCountdown({
                 : {}
             }
             transition={{
+              type: "tween",
               duration: 0.5,
               repeat: Infinity,
               ease: "easeInOut",
@@ -259,6 +268,7 @@ export function TimerCountdown({
             : {}
         }
         transition={{
+          type: "tween",
           duration: 0.5,
           repeat: Infinity,
           ease: "easeInOut",

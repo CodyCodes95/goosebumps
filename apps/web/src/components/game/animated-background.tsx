@@ -140,6 +140,7 @@ function ParticleSystem({
             ],
           }}
           transition={{
+            type: "tween",
             duration: 3 + Math.random() * 2,
             repeat: Infinity,
             ease: "easeInOut",

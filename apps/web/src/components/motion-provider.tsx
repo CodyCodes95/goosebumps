@@ -97,6 +97,7 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     let frameCount = 0;
     let lastTime = performance.now();
     let animationId: number;
+    let currentPerformanceMode = performanceMode; // Capture current value
 
     const checkPerformance = () => {
       frameCount++;
@@ -106,11 +107,13 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
         const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
 
         // Enable performance mode if FPS is consistently low
-        if (fps < 45) {
+        if (fps < 45 && !currentPerformanceMode) {
           setPerformanceMode(true);
-        } else if (fps > 55 && performanceMode) {
+          currentPerformanceMode = true;
+        } else if (fps > 55 && currentPerformanceMode) {
           // Disable performance mode if FPS improves
           setPerformanceMode(false);
+          currentPerformanceMode = false;
         }
 
         frameCount = 0;
@@ -130,7 +133,7 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
         cancelAnimationFrame(animationId);
       }
     };
-  }, [performanceMode]);
+  }, []); // Remove performanceMode dependency to prevent infinite loop
 
   // Adjust motion config based on reduced motion preference and performance
   const shouldReduceMotion = prefersReducedMotion || performanceMode;
@@ -256,7 +259,17 @@ export const gameVariants = {
   countdown: {
     initial: { scale: 0, opacity: 0 },
     animate: { scale: 1, opacity: 1 },
-    pulse: { scale: [1, 1.2, 1], opacity: [1, 0.8, 1] },
+    pulse: {
+      scale: 1.1,
+      opacity: 0.9,
+      transition: {
+        type: "tween",
+        duration: 0.8,
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        ease: "easeInOut",
+      },
+    },
     exit: { scale: 0, opacity: 0 },
   },
 
@@ -279,6 +292,7 @@ export const gameVariants = {
     animate: {
       y: [-10, 10, -10],
       transition: {
+        type: "tween",
         duration: 3,
         repeat: Infinity,
         ease: "easeInOut",

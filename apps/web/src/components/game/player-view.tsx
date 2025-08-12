@@ -53,6 +53,19 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
   const transition = useGameTransition("default");
   const { playCelebration } = useGameSounds();
 
+  // Memoize countdown callbacks to prevent unnecessary re-renders
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+  }, []);
+
+  const handleCountdownTick = useCallback((num: number) => {
+    if (num === 0) toast.success("Go! Choose your answer!");
+  }, []);
+
+  const handleConfettiComplete = useCallback(() => {
+    setShowConfetti(false);
+  }, []);
+
   // Set device fingerprint on client side
   useEffect(() => {
     setDeviceFingerprint(getDeviceFingerprint());
@@ -128,7 +141,7 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
     if (quiz?.phase === "answering" && !showCountdown) {
       setShowCountdown(true);
     }
-  }, [quiz?.phase, showCountdown]);
+  }, [quiz?.phase]); // Remove showCountdown dependency to prevent infinite loop
 
   // Show confetti and play celebration sound on correct answer
   useEffect(() => {
@@ -184,6 +197,7 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
         quizId: quiz!._id,
         roundId: liveData!.currentRound!._id,
         selectedOptionId: optionId,
+        deviceFingerprint,
       });
       toast.success("Answer submitted!");
     } catch (error) {
@@ -297,10 +311,8 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
         {showCountdown && quiz.phase === "answering" && (
           <Countdown
             from={3}
-            onComplete={() => setShowCountdown(false)}
-            onTick={(num) => {
-              if (num === 0) toast.success("Go! Choose your answer!");
-            }}
+            onComplete={handleCountdownComplete}
+            onTick={handleCountdownTick}
           />
         )}
       </AnimatePresence>
@@ -308,7 +320,7 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
       {/* Confetti celebration */}
       <ConfettiExplosion
         isActive={showConfetti}
-        onComplete={() => setShowConfetti(false)}
+        onComplete={handleConfettiComplete}
       />
 
       <div className="game-screen">

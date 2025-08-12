@@ -186,7 +186,7 @@ export const AnswerCard = React.memo(function AnswerCard({
       <motion.span
         className="text-center break-words"
         animate={isSelected ? { scale: [1, 1.02, 1] } : {}}
-        transition={{ duration: 0.2 }}
+        transition={{ type: "tween", duration: 0.2 }}
       >
         {option.text}
       </motion.span>
