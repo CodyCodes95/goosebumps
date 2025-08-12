@@ -357,8 +357,6 @@ Milestone 8 – Polish & Edge Cases (Day 8–10)
 Milestone 9 – Testing, Analytics, and Launch (Day 10–12)
 - [ ] Unit/integration/E2E with mocked AI.
 - [ ] Basic analytics + Sentry.
-- [ ] Load test with 100+ concurrent players.
-- [ ] CI/CD to Vercel + Convex Cloud; set ENV; smoke tests.
 
 ---
 
