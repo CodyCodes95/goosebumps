@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { PresenterView } from "../../../components/presenter-view";
+import { PresenterView } from "./_components/presenter-view";
 
 type PresentPageProps = {
   params: Promise<{

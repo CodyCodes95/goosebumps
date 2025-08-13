@@ -2,12 +2,17 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { api, type Id } from "@goosebumps/backend";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { LoaderContainer } from "./loader";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../../components/ui/card";
+import { Badge } from "../../../../components/ui/badge";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Label } from "../../../../components/ui/label";
+import { LoaderContainer } from "../../../../components/loader";
 import {
   Users,
   Clock,
@@ -20,7 +25,7 @@ import {
 import { useEffect, useState, useCallback, useMemo } from "react";
 import usePresence from "@convex-dev/presence/react";
 import { toast } from "sonner";
-import { GamePlayerView } from "./game/player-view";
+import { GamePlayerView } from "../../../../components/game/player-view";
 
 type PlayerViewProps = {
   quizId: string;

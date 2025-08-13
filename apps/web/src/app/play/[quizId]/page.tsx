@@ -1,4 +1,4 @@
-import { PlayerView } from "../../../components/player-view";
+import { PlayerView } from "./_components/player-view";
 
 // Anonymous route - no auth required
 type PlayPageProps = {
