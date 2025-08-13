@@ -1,26 +1,46 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 import { useMotion } from "@/components/motion-provider";
 
-type Particle = {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  color: string;
-  speed: number;
-  direction: number;
-  opacity: number;
-};
+type Variant = "default" | "celebration" | "countdown" | "lobby";
+type Intensity = "low" | "medium" | "high";
 
 type AnimatedBackgroundProps = {
-  variant?: "default" | "celebration" | "countdown" | "lobby";
-  intensity?: "low" | "medium" | "high";
+  variant?: Variant;
+  intensity?: Intensity;
   className?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
+};
+
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  opacity: number;
+  pulse: number;
+};
+
+type Confetti = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rot: number;
+  vr: number;
+  color: string;
+  life: number;
 };
 
 const gradientConfigs = {
@@ -48,105 +68,199 @@ const gradientConfigs = {
     overlay:
       "radial-gradient(circle at 80% 20%, var(--accent)/0.1 0%, transparent 50%)",
   },
+} as const;
+
+const VARIANT_COLOR_VARS: Record<Variant, string[]> = {
+  default: ["--primary", "--accent", "--muted"],
+  celebration: ["--success", "--warning", "--accent", "--primary"],
+  countdown: ["--primary", "--accent"],
+  lobby: ["--primary", "--accent", "--muted"],
 };
 
-function generateParticles(count: number, variant: string): Particle[] {
-  const colors =
-    variant === "celebration"
-      ? ["var(--success)", "var(--warning)", "var(--accent)", "var(--primary)"]
-      : ["var(--primary)", "var(--accent)", "var(--muted)"];
+const INTENSITY_COUNT: Record<Intensity, number> = {
+  low: 30,
+  medium: 60,
+  high: 120,
+};
 
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 1,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    speed: Math.random() * 2 + 0.5,
-    direction: Math.random() * 360,
-    opacity: Math.random() * 0.6 + 0.2,
-  }));
+function resolveCssVar(name: string): string {
+  if (typeof window === "undefined") return "#ffffff";
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+  return (v || "").trim() || "#ffffff";
 }
 
-function ParticleSystem({
-  variant,
-  intensity,
-  isVisible,
+function getResolvedColors(variant: Variant): string[] {
+  const vars = VARIANT_COLOR_VARS[variant] || VARIANT_COLOR_VARS.default;
+  return vars.map((v) => resolveCssVar(v));
+}
+
+function CanvasParticles({
+  variant = "default",
+  intensity = "medium",
+  isVisible = true,
 }: {
-  variant: string;
-  intensity: string;
-  isVisible: boolean;
+  variant?: Variant;
+  intensity?: Intensity;
+  isVisible?: boolean;
 }) {
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  const tsRef = useRef<number>(0);
   const { prefersReducedMotion } = useMotion();
 
-  const baseParticleCount = {
-    low: 10,
-    medium: 20,
-    high: 35,
-  }[intensity];
+  const targetCount = useMemo(() => {
+    if (prefersReducedMotion) return 0;
+    return INTENSITY_COUNT[intensity];
+  }, [intensity, prefersReducedMotion]);
 
-  // Reduce particle count based on performance
-  const particleCount = prefersReducedMotion ? 0 : baseParticleCount;
+  const resize = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const { clientWidth, clientHeight } = canvas;
+    canvas.width = Math.max(1, Math.floor(clientWidth * dpr));
+    canvas.height = Math.max(1, Math.floor(clientHeight * dpr));
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  const regenerate = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const w = canvas.clientWidth || 1;
+    const h = canvas.clientHeight || 1;
+    const colors = getResolvedColors(variant);
+    const count = targetCount;
+
+    const arr: Particle[] = Array.from({ length: count }, () => {
+      const speed = 0.15 + Math.random() * 0.6; // px/ms
+      const dir = Math.random() * Math.PI * 2;
+      return {
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: Math.cos(dir) * speed,
+        vy: Math.sin(dir) * speed,
+        size: 1 + Math.random() * 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        opacity: 0.25 + Math.random() * 0.55,
+        pulse: Math.random() * Math.PI * 2,
+      };
+    });
+
+    particlesRef.current = arr;
+  };
 
   useEffect(() => {
-    if (prefersReducedMotion || !isVisible) {
-      setParticles([]);
-      return;
+    resize();
+    regenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant, targetCount]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      resize();
+      regenerate();
+    };
+
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(handleResize)
+        : null;
+
+    if (ro && canvasRef.current) {
+      ro.observe(canvasRef.current);
+    } else {
+      window.addEventListener("resize", handleResize);
     }
 
-    setParticles(generateParticles(particleCount || 0, variant));
-  }, [variant, intensity, isVisible, prefersReducedMotion, particleCount]);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
-    if (prefersReducedMotion || !isVisible || particles.length === 0) return;
+    let running = true;
 
-    const interval = setInterval(() => {
-      setParticles((prev) =>
-        prev.map((particle) => ({
-          ...particle,
-          x: (particle.x + Math.cos(particle.direction) * particle.speed) % 100,
-          y: (particle.y + Math.sin(particle.direction) * particle.speed) % 100,
-          direction: particle.direction + (Math.random() - 0.5) * 0.1,
-        }))
-      );
-    }, 100);
+    const tick = (ts: number) => {
+      if (!running) return;
 
-    return () => clearInterval(interval);
-  }, [particles, prefersReducedMotion, isVisible]);
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (!canvas || !ctx) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
 
-  if (prefersReducedMotion || !isVisible) return null;
+      const w = canvas.clientWidth || 1;
+      const h = canvas.clientHeight || 1;
+
+      const prev = tsRef.current || ts;
+      const dt = Math.min(32, ts - prev);
+      tsRef.current = ts;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const arr = particlesRef.current;
+      for (let i = 0; i < arr.length; i++) {
+        const p = arr[i];
+
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.pulse += 0.002 * dt;
+
+        const drift = 0.0006 * dt;
+        p.vx += (Math.random() - 0.5) * drift;
+        p.vy += (Math.random() - 0.5) * drift;
+
+        if (p.x < -10) p.x = w + 10;
+        if (p.x > w + 10) p.x = -10;
+        if (p.y < -10) p.y = h + 10;
+        if (p.y > h + 10) p.y = -10;
+
+        const scale = 0.9 + Math.sin(p.pulse) * 0.1;
+        const size = p.size * scale;
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (rafRef.current != null) return;
+      tsRef.current = 0;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      tsRef.current = 0;
+    };
+
+    const onVisibility = () => {
+      if (document.hidden || !isVisible || prefersReducedMotion) stop();
+      else start();
+    };
+
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      running = false;
+      document.removeEventListener("visibilitychange", onVisibility);
+      stop();
+    };
+  }, [isVisible, prefersReducedMotion]);
+
+  if (prefersReducedMotion) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            backgroundColor: particle.color,
-            opacity: particle.opacity,
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [
-              particle.opacity,
-              particle.opacity * 0.5,
-              particle.opacity,
-            ],
-          }}
-          transition={{
-            type: "tween",
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+    <div className="absolute inset-0 pointer-events-none">
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 }
@@ -161,70 +275,87 @@ export function AnimatedBackground({
   const { prefersReducedMotion } = useMotion();
   const config = gradientConfigs[variant];
 
-  // Pause animations when tab is not visible for performance
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsVisible(!document.hidden);
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    const onVis = () => setIsVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
   return (
     <div className={cn("relative min-h-screen overflow-hidden", className)}>
-      {/* Base gradient background */}
-      <motion.div
-        className="absolute inset-0"
-        style={{ background: config.background }}
-        animate={
-          !prefersReducedMotion && isVisible
-            ? {
-                backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
-              }
-            : {}
-        }
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
+      <div
+        className="absolute will-change-transform"
+        style={{
+          left: "-10%",
+          top: "-10%",
+          width: "120%",
+          height: "120%",
+          background: config.background,
+          transform: prefersReducedMotion
+            ? "translate3d(0,0,0)"
+            : "translate3d(-6%, -6%, 0)",
+          animation: prefersReducedMotion
+            ? "none"
+            : "t3-bg-pan 20s linear infinite",
+          backgroundSize: "140% 140%",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        className="absolute will-change-transform mix-blend-normal"
+        style={{
+          left: "-10%",
+          top: "-10%",
+          width: "120%",
+          height: "120%",
+          background: config.overlay,
+          transform: prefersReducedMotion
+            ? "translate3d(0,0,0)"
+            : "translate3d(6%, 6%, 0)",
+          animation: prefersReducedMotion
+            ? "none"
+            : "t3-bg-pan-rev 15s linear infinite 5s",
+          backgroundSize: "140% 140%",
+          pointerEvents: "none",
         }}
       />
 
-      {/* Overlay gradient that shifts */}
-      <motion.div
-        className="absolute inset-0"
-        style={{ background: config.overlay }}
-        animate={
-          !prefersReducedMotion && isVisible
-            ? {
-                backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
-              }
-            : {}
-        }
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-          delay: 5,
-        }}
-      />
-
-      {/* Particle system */}
-      <ParticleSystem
+      <CanvasParticles
         variant={variant}
         intensity={intensity}
         isVisible={isVisible}
       />
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
+
+      <style jsx global>{`
+        @keyframes t3-bg-pan {
+          0% {
+            transform: translate3d(-6%, -6%, 0);
+          }
+          50% {
+            transform: translate3d(6%, 6%, 0);
+          }
+          100% {
+            transform: translate3d(-6%, -6%, 0);
+          }
+        }
+        @keyframes t3-bg-pan-rev {
+          0% {
+            transform: translate3d(6%, 6%, 0);
+          }
+          50% {
+            transform: translate3d(-6%, -6%, 0);
+          }
+          100% {
+            transform: translate3d(6%, 6%, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
 
-// Celebration confetti component
 export function ConfettiExplosion({
   isActive,
   duration = 3000,
@@ -234,71 +365,127 @@ export function ConfettiExplosion({
   duration?: number;
   onComplete?: () => void;
 }) {
-  const [confetti, setConfetti] = useState<Particle[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const confettiRef = useRef<Confetti[] | null>(null);
+  const tsRef = useRef<number>(0);
   const { prefersReducedMotion } = useMotion();
 
   useEffect(() => {
     if (!isActive || prefersReducedMotion) return;
 
-    // Generate confetti particles
-    const particles = Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: 50 + (Math.random() - 0.5) * 20, // Start from center
-      y: 50 + (Math.random() - 0.5) * 20,
-      size: Math.random() * 8 + 4,
-      color: [
-        "var(--success)",
-        "var(--warning)",
-        "var(--accent)",
-        "var(--primary)",
-      ][Math.floor(Math.random() * 4)],
-      speed: Math.random() * 5 + 3,
-      direction: Math.random() * 360,
-      opacity: 1,
-    }));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    setConfetti(particles);
+    const setup = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { clientWidth, clientHeight } = canvas;
+      canvas.width = Math.max(1, Math.floor(clientWidth * dpr));
+      canvas.height = Math.max(1, Math.floor(clientHeight * dpr));
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
 
-    // Clean up after duration
-    const cleanup = setTimeout(() => {
-      setConfetti([]);
-      onComplete?.();
-    }, duration || 3000);
+    setup();
 
-    return () => clearTimeout(cleanup);
+    const colors = [
+      resolveCssVar("--success"),
+      resolveCssVar("--warning"),
+      resolveCssVar("--accent"),
+      resolveCssVar("--primary"),
+    ];
+
+    const W = canvas.clientWidth || 1;
+    const H = canvas.clientHeight || 1;
+
+    const count = 120;
+    const arr: Confetti[] = Array.from({ length: count }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * 1.8; // px/ms
+      return {
+        x: W * 0.5 + (Math.random() - 0.5) * 40,
+        y: H * 0.35 + (Math.random() - 0.5) * 40,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 0.3,
+        size: 3 + Math.random() * 5,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.01,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: duration,
+      };
+    });
+
+    confettiRef.current = arr;
+    tsRef.current = performance.now();
+
+    const gravity = 0.0016; // px/ms^2
+    const drag = 0.0008;
+
+    const tick = (ts: number) => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      const prev = tsRef.current || ts;
+      const dt = Math.min(32, ts - prev);
+      tsRef.current = ts;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const items = confettiRef.current || [];
+      let alive = 0;
+
+      for (let i = 0; i < items.length; i++) {
+        const c = items[i];
+        if (c.life <= 0) continue;
+
+        c.vy += gravity * dt;
+        c.vx *= 1 - drag * dt;
+        c.vy *= 1 - drag * dt;
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        c.rot += c.vr * dt;
+        c.life -= dt;
+
+        const alpha = Math.max(0, Math.min(1, c.life / duration));
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size * 0.5, -c.size * 0.5, c.size, c.size * 0.6);
+        ctx.restore();
+
+        if (c.life > 0 && c.y < H + 20) alive++;
+      }
+
+      if (alive > 0) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        confettiRef.current = null;
+        onComplete?.();
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    const onResize = () => setup();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      window.removeEventListener("resize", onResize);
+    };
   }, [isActive, duration, onComplete, prefersReducedMotion]);
 
-  if (prefersReducedMotion || !isActive) return null;
+  if (!isActive || prefersReducedMotion) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {confetti.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute"
-          style={{
-            backgroundColor: particle.color,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-          }}
-          initial={{
-            x: `${particle.x}vw`,
-            y: `${particle.y}vh`,
-            rotate: 0,
-            opacity: 1,
-          }}
-          animate={{
-            x: `${particle.x + Math.cos(particle.direction) * 50}vw`,
-            y: `${particle.y + Math.sin(particle.direction) * 50 + 100}vh`,
-            rotate: 720,
-            opacity: 0,
-          }}
-          transition={{
-            duration: (duration || 3000) / 1000,
-            ease: "easeOut",
-          }}
-        />
-      ))}
+    <div className="fixed inset-0 pointer-events-none z-50">
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 }
