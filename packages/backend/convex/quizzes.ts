@@ -10,6 +10,7 @@ import { v } from "convex/values";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { model } from "../lib";
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -683,7 +684,7 @@ export const generateAiAnswers = internalAction({
 
         // Determine next action
         const { object: actionDecision } = await generateObject({
-          model: google("gemini-2.0-flash"),
+          model: model,
           system: `You are a trivia question generator agent. Your job is to decide whether you can confidently create a trivia question based on the given prompt, or if you need to search for more current information first.
 
 Current context:
