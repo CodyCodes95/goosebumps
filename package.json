@@ -12,7 +12,8 @@
     "check-types": "turbo check-types",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F @goosebumps/backend dev"
+    "dev:server": "turbo -F @goosebumps/backend dev",
+    "eval:dev": "evalite watch"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.30.0",
@@ -24,8 +25,11 @@
     "lucide-react": "^0.539.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.1.2",
+    "autoevals": "^0.0.130",
+    "evalite": "^0.11.4",
     "turbo": "^2.5.4",
-    "@biomejs/biome": "^2.1.2"
+    "vitest": "2"
   },
   "packageManager": "bun@1.2.2"
 }
