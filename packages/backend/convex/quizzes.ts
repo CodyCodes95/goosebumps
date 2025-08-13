@@ -7,10 +7,9 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { model } from "../lib";
+import { model } from "../lib/model";
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -665,11 +664,6 @@ export const generateAiAnswers = internalAction({
   },
   handler: async (ctx, { quizId, roundId, promptText }) => {
     try {
-      // Create Google provider with API key
-      const google = createGoogleGenerativeAI({
-        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-      });
-
       // Initialize system context
       const context: SystemContext = {
         searchResults: [],
@@ -760,7 +754,7 @@ Make your decision:`,
               : "";
 
           const { object: aiResponse } = await generateObject({
-            model: google("gemini-2.0-flash"),
+            model: model,
             system: `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
 
 Rules:
@@ -808,7 +802,7 @@ Rules:
       console.log("Max steps reached, falling back to simple generation");
 
       const { object: aiResponse } = await generateObject({
-        model: google("gemini-2.0-flash"),
+        model: model,
         system: `You are a trivia question generator. Given a user's prompt, create a multiple-choice trivia question with exactly 4 answer options where only 1 is correct and 3 are plausible but incorrect distractors.
 
 Rules:
