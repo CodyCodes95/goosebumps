@@ -39,8 +39,21 @@ function getDeviceFingerprint(): string {
   return localStorage.getItem("goosebumps-device-id") || "";
 }
 
-export function GamePlayerView({ quizId }: GamePlayerViewProps) {
-  const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
+type GamePlayerContentProps = {
+  quiz: NonNullable<
+    ReturnType<typeof useQuery<typeof api.quizzes.getQuizPublic>>
+  >;
+  liveData: NonNullable<
+    ReturnType<typeof useQuery<typeof api.quizzes.getQuizLive>>
+  >;
+  deviceFingerprint: string;
+};
+
+function GamePlayerContent({
+  quiz,
+  liveData,
+  deviceFingerprint,
+}: GamePlayerContentProps) {
   const [promptText, setPromptText] = useState("");
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
@@ -52,6 +65,18 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
 
   const transition = useGameTransition("default");
   const { playCelebration } = useGameSounds();
+
+  // Now players will have the correct type from liveData
+  const { players } = liveData;
+  const myPlayer = players.find(
+    (p) => p.deviceFingerprint === deviceFingerprint && !p.isHost
+  );
+
+  // Get leaderboard for scoreboard phase
+  const leaderboard = useQuery(
+    api.quizzes.getLeaderboard,
+    quiz._id ? { quizId: quiz._id as Id<"quizzes"> } : "skip"
+  );
 
   // Memoize countdown callbacks to prevent unnecessary re-renders
   const handleCountdownComplete = useCallback(() => {
@@ -66,34 +91,9 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
     setShowConfetti(false);
   }, []);
 
-  // Set device fingerprint on client side
-  useEffect(() => {
-    setDeviceFingerprint(getDeviceFingerprint());
-  }, []);
-
-  // Get public quiz data by ID first to get the join code
-  const quiz = useQuery(api.quizzes.getQuizPublic, {
-    quizId: quizId as Id<"quizzes">,
-  });
-
-  // Get live quiz data with players
-  const liveData = useQuery(
-    api.quizzes.getQuizLive,
-    quiz?.joinCode ? { joinCode: quiz.joinCode } : "skip"
-  );
-
-  // Get leaderboard for scoreboard phase
-  const leaderboard = useQuery(
-    api.quizzes.getLeaderboard,
-    quiz?._id ? { quizId: quiz._id as Id<"quizzes"> } : "skip"
-  );
-
   // Presence heartbeat
-  const roomId = (quiz?._id as unknown as string) ?? "";
-  const presenceDisplayName =
-    liveData?.players?.find(
-      (p) => p.deviceFingerprint === deviceFingerprint && !p.isHost
-    )?.name || "Player";
+  const roomId = quiz._id as unknown as string;
+  const presenceDisplayName = myPlayer?.name || "Player";
   const presenceState =
     usePresence(api.presence, roomId, presenceDisplayName) ?? [];
 
@@ -211,45 +211,6 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
     }
   };
 
-  if (quiz === undefined || liveData === undefined) {
-    return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <LoaderContainer />
-        </div>
-      </AnimatedBackground>
-    );
-  }
-
-  if (!quiz) {
-    return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <motion.div
-            className="text-center space-y-4"
-            variants={gameVariants.pageTransition}
-            initial="initial"
-            animate="animate"
-            transition={transition}
-          >
-            <div className="text-6xl">🚫</div>
-            <h2 className="text-2xl font-bold text-foreground">
-              Quiz Not Found
-            </h2>
-            <p className="text-muted-foreground">
-              This quiz doesn't exist or has been deleted.
-            </p>
-          </motion.div>
-        </div>
-      </AnimatedBackground>
-    );
-  }
-
-  const { players = [] } = liveData;
-  const myPlayer = players.find(
-    (p) => p.deviceFingerprint === deviceFingerprint && !p.isHost
-  );
-
   if (!myPlayer) {
     return (
       <AnimatedBackground variant="lobby" intensity="medium">
@@ -280,8 +241,12 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
     );
   }
 
+  // At this point, myPlayer is guaranteed to be defined
+  const typedMyPlayer = myPlayer; // TypeScript assertion helper
+
   const nonHostPlayers = players.filter((p) => !p.isHost);
-  const isPrompter = liveData?.currentRound?.prompterPlayerId === myPlayer?._id;
+  const isPrompter =
+    liveData?.currentRound?.prompterPlayerId === typedMyPlayer._id;
 
   // Convert API answer options to our component format
   const answerOptions: AnswerOption[] =
@@ -345,7 +310,7 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
             transition={transition}
           >
             <h1 className="text-4xl font-bold text-foreground mb-2">
-              Hey {myPlayer.name}! 👋
+              Hey {typedMyPlayer.name}! 👋
             </h1>
 
             {/* Phase progress */}
@@ -428,13 +393,13 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
               key={player._id}
               className={cn(
                 "game-card p-4 text-center",
-                player._id === myPlayer._id && "ring-2 ring-primary"
+                player._id === typedMyPlayer._id && "ring-2 ring-primary"
               )}
               variants={gameVariants.cardEntrance}
             >
               <div className="text-2xl mb-2">🎮</div>
               <p className="font-medium text-sm truncate">{player.name}</p>
-              {player._id === myPlayer._id && (
+              {player._id === typedMyPlayer._id && (
                 <p className="text-xs text-primary">(You)</p>
               )}
             </motion.div>
@@ -840,7 +805,7 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
           <div className="text-8xl animate-bounce-subtle">🏆</div>
           <h2 className="text-4xl font-bold">Game Complete!</h2>
           <p className="text-xl text-muted-foreground">
-            Thanks for playing, {myPlayer.name}!
+            Thanks for playing, {typedMyPlayer.name}!
           </p>
         </div>
 
@@ -850,12 +815,12 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
             <h3 className="text-xl font-bold mb-4">Your Final Score</h3>
             <div className="space-y-2">
               <div className="text-3xl font-bold text-primary">
-                {myPlayer.score} points
+                {typedMyPlayer.score} points
               </div>
               <div className="text-muted-foreground">
                 Position:{" "}
-                {leaderboard.find((p) => p._id === myPlayer._id)?.position ||
-                  "N/A"}
+                {leaderboard?.find((p) => p._id === typedMyPlayer._id)
+                  ?.position || "N/A"}
               </div>
             </div>
           </div>
@@ -877,4 +842,77 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
       </div>
     );
   }
+}
+
+export function GamePlayerView({ quizId }: GamePlayerViewProps) {
+  const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
+
+  // Set device fingerprint on client side
+  useEffect(() => {
+    setDeviceFingerprint(getDeviceFingerprint());
+  }, []);
+
+  // Get public quiz data by ID first to get the join code
+  const quiz = useQuery(api.quizzes.getQuizPublic, {
+    quizId: quizId as Id<"quizzes">,
+  });
+
+  // Get live quiz data with players
+  const liveData = useQuery(
+    api.quizzes.getQuizLive,
+    quiz?.joinCode ? { joinCode: quiz.joinCode } : "skip"
+  );
+
+  if (quiz === undefined || liveData === undefined) {
+    return (
+      <AnimatedBackground variant="default" intensity="low">
+        <div className="game-screen flex items-center justify-center">
+          <LoaderContainer />
+        </div>
+      </AnimatedBackground>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <AnimatedBackground variant="default" intensity="low">
+        <div className="game-screen flex items-center justify-center">
+          <motion.div
+            className="text-center space-y-4"
+            variants={gameVariants.pageTransition}
+            initial="initial"
+            animate="animate"
+            transition={useGameTransition("default")}
+          >
+            <div className="text-6xl">🚫</div>
+            <h2 className="text-2xl font-bold text-foreground">
+              Quiz Not Found
+            </h2>
+            <p className="text-muted-foreground">
+              This quiz doesn't exist or has been deleted.
+            </p>
+          </motion.div>
+        </div>
+      </AnimatedBackground>
+    );
+  }
+
+  // Only render the main content when we have both quiz and liveData
+  if (!liveData) {
+    return (
+      <AnimatedBackground variant="default" intensity="low">
+        <div className="game-screen flex items-center justify-center">
+          <LoaderContainer />
+        </div>
+      </AnimatedBackground>
+    );
+  }
+
+  return (
+    <GamePlayerContent
+      quiz={quiz}
+      liveData={liveData}
+      deviceFingerprint={deviceFingerprint}
+    />
+  );
 }
