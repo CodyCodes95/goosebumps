@@ -10,7 +10,7 @@ export default evalite("Trivia Eval", {
       { input: "Who won 2024 geoguessr world cup?", expected: "Blinky" },
       {
         input: "How did edward become a vampire?",
-        expected: "He was bitten by Edward",
+        expected: "He was bitten by Carlisle",
       },
     ];
   },
