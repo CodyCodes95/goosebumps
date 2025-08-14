@@ -309,10 +309,6 @@ function GamePlayerContent({
             animate="animate"
             transition={transition}
           >
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              Hey {typedMyPlayer.name}! 👋
-            </h1>
-
             {/* Phase progress */}
             <PhaseProgress
               currentPhase={quiz.currentRoundIndex + 1}
@@ -321,7 +317,7 @@ function GamePlayerContent({
                 { length: quiz.config.totalRounds },
                 (_, i) => `Round ${i + 1}`
               )}
-              className="mt-4"
+              className="mx-auto"
             />
           </motion.div>
 

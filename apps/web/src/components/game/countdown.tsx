@@ -292,16 +292,14 @@ export function PhaseProgress({
   phaseNames?: string[];
   className?: string;
 }) {
-  const progress = (currentPhase / totalPhases) * 100;
   const transition = useGameTransition("gentle");
 
   return (
     <div className={cn("w-full max-w-md", className)}>
-      {/* Phase indicator */}
       {phaseNames.length > 0 && (
         <motion.div
           className="text-sm text-muted-foreground text-center mb-2"
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={transition}
         >
@@ -309,25 +307,42 @@ export function PhaseProgress({
         </motion.div>
       )}
 
-      {/* Progress bar */}
-      <div className="relative h-2 bg-muted/30 rounded-full overflow-hidden">
-        <motion.div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-accent rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={transition}
-        />
+      {/* Segmented progress */}
+      <div
+        className="flex items-center gap-2"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={totalPhases}
+        aria-valuenow={currentPhase}
+        aria-label="Round progress"
+      >
+        {Array.from({ length: totalPhases }).map((_, index) => {
+          const isCompleted = index < currentPhase - 1;
+          const isCurrent = index === currentPhase - 1;
 
-        {/* Shimmer effect */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-          animate={{ x: ["-100%", "100%"] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
+          return (
+            <div key={index} className="flex-1">
+              <div
+                className={cn(
+                  "h-2 rounded-full transition-colors",
+                  isCompleted && "bg-primary",
+                  isCurrent && "bg-primary",
+                  !isCompleted && !isCurrent && "bg-muted/30"
+                )}
+              />
+
+              {/* Current round accent */}
+              {isCurrent && (
+                <motion.div
+                  className="h-1 rounded-full bg-primary/50 mt-1"
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ ...transition, duration: 0.3 }}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
