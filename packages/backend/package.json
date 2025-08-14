@@ -5,6 +5,7 @@
   "types": "./index.ts",
   "scripts": {
     "dev": "convex dev",
+    "build": "convex deploy",
     "eval:dev": "evalite watch"
   },
   "author": "",
