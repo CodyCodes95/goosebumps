@@ -801,6 +801,16 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
             isLocked={true}
           />
         </div>
+
+        {/* Fun detail, shown between reveal and scoreboard if available */}
+        {liveData?.currentRound?.aiDetailText && (
+          <div className="game-card p-6">
+            <h3 className="text-lg font-semibold mb-2">Did you know?</h3>
+            <p className="text-muted-foreground text-base">
+              {liveData.currentRound.aiDetailText}
+            </p>
+          </div>
+        )}
       </div>
     );
   }

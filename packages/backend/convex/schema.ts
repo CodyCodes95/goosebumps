@@ -59,6 +59,7 @@ export default defineSchema({
         })
       )
     ),
+    aiDetailText: v.optional(v.string()), // background-fetched detail/fun fact for reveal
     aiRequestId: v.optional(v.string()),
     aiErrored: v.optional(v.boolean()),
     completedAt: v.optional(v.number()),

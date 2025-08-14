@@ -7,7 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { askTriviaAgent } from "../lib/agent";
+import { askTriviaAgent, askTriviaDetailAgent } from "../lib/agent";
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -707,6 +707,14 @@ export const advanceToAnswering = internalMutation({
         expectedDeadline: answerDeadlineAt,
       }
     );
+
+    // Fire-and-forget background detail generation so it doesn't block answering
+    await ctx.scheduler.runAfter(0, internal.quizzes.generateRoundDetail, {
+      quizId,
+      roundId,
+      question,
+      aiAnswerOptions,
+    });
   },
 });
 
@@ -1104,6 +1112,49 @@ export const autoLockAnswers = internalAction({
     });
 
     return { success: true, reason: "timeout" };
+  },
+});
+
+// Generate a concise detail/fun fact for the round in the background
+export const generateRoundDetail = internalAction({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+    question: v.string(),
+    aiAnswerOptions: v.array(
+      v.object({ id: v.string(), text: v.string(), isCorrect: v.boolean() })
+    ),
+  },
+  handler: async (ctx, { quizId, roundId, question, aiAnswerOptions }) => {
+    try {
+      const correct = aiAnswerOptions.find((o) => o.isCorrect);
+      if (!correct) return;
+
+      const detail = await askTriviaDetailAgent({
+        question,
+        correctAnswer: correct.text,
+      });
+
+      // Store the generated detail on the round for reveal phase consumption
+      await ctx.runMutation(internal.quizzes.setRoundDetail, {
+        roundId,
+        detailText: detail.detail,
+      });
+    } catch (err) {
+      console.error("Failed to generate round detail:", err);
+      // Non-fatal: do not throw, we don't want to disrupt the game flow
+    }
+  },
+});
+
+// Internal mutation to persist the generated detail for a round
+export const setRoundDetail = internalMutation({
+  args: {
+    roundId: v.id("rounds"),
+    detailText: v.string(),
+  },
+  handler: async (ctx, { roundId, detailText }) => {
+    await ctx.db.patch(roundId, { aiDetailText: detailText });
   },
 });
 

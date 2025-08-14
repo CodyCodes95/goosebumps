@@ -28,6 +28,14 @@ export const triviaQuestionSchema = z.object({
     .describe("Three incorrect but plausible answers"),
 });
 
+export const triviaDetailSchema = z.object({
+  detail: z
+    .string()
+    .describe(
+      "A concise, human-friendly detail or fun fact expanding on the trivia question/answer (1-2 sentences)."
+    ),
+});
+
 export const nextActionSchema = z.object({
   action: z
     .enum(["google-search", "generate-object"])
@@ -181,4 +189,20 @@ export async function askTriviaAgent(args: {
     promptText: context.promptText,
   });
   return aiResponse;
+}
+
+export async function askTriviaDetailAgent(args: {
+  question: string;
+  correctAnswer: string;
+}): Promise<z.infer<typeof triviaDetailSchema>> {
+  const { object } = await generateObject({
+    model: model,
+    system:
+      "You are a trivia detail agent. Given a trivia question and its correct answer, produce one compelling, accurate detail or fun fact about the topic. Keep it to 1-2 sentences, plain language, engaging but factual. If the topic is recent, ensure recency and avoid speculation.",
+    prompt: `Question: ${args.question}\nCorrect Answer: ${args.correctAnswer}\n\nWrite one concise detail or fun fact to show after revealing the correct answer:`,
+    schema: triviaDetailSchema,
+    temperature: 0.5,
+  });
+
+  return object;
 }
