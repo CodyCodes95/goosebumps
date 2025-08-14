@@ -93,7 +93,7 @@ export async function performWebSearch(query: string): Promise<
 > {
   const searchResults = await searchSerper({
     q: query,
-    num: 3,
+    num: 10,
   });
 
   const results =
