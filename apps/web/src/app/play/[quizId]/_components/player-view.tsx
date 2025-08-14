@@ -364,7 +364,7 @@ function LegacyPlayerView({ quizId }: PlayerViewProps) {
                         id="prompt-input"
                         value={promptText}
                         onChange={(e) => setPromptText(e.target.value)}
-                        placeholder="e.g., Famous landmarks in France"
+                        placeholder="e.g., who won the 2024 geoguessr world cup?"
                         maxLength={500}
                         disabled={isSubmittingPrompt}
                         onKeyDown={(e) => {

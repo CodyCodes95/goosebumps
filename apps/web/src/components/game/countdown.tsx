@@ -24,10 +24,11 @@ const sizeClasses = {
 };
 
 const glowClasses = {
-  sm: "shadow-[0_0_20px_currentColor]",
-  md: "shadow-[0_0_40px_currentColor]",
-  lg: "shadow-[0_0_60px_currentColor]",
-  xl: "shadow-[0_0_100px_currentColor]",
+  // Use drop-shadow so the glow follows the glyph shapes instead of the box
+  sm: "drop-shadow-[0_0_20px_currentColor]",
+  md: "drop-shadow-[0_0_40px_currentColor]",
+  lg: "drop-shadow-[0_0_60px_currentColor]",
+  xl: "drop-shadow-[0_0_100px_currentColor]",
 };
 
 export function Countdown({
