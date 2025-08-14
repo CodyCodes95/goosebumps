@@ -5,3 +5,5 @@ const google = createGoogleGenerativeAI({
 });
 
 export const model = google("gemini-2.0-flash");
+
+export const factualityModel = google("gemini-2.0-flash");
