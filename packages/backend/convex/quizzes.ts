@@ -8,7 +8,7 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
-  SystemContext as AgentSystemContext,
+  type SystemContext as AgentSystemContext,
   buildSearchContext,
   decideNextAction,
   generateTriviaQuestion,
