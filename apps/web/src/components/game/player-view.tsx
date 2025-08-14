@@ -611,7 +611,7 @@ function GamePlayerContent({
       <div className="space-y-8">
         {/* Question */}
         <div className="text-center space-y-4">
-          <div className="text-6xl animate-bounce">🎉</div>
+          
           <h2 className="text-2xl md:text-3xl font-bold max-w-3xl mx-auto">
             {liveData?.currentRound?.promptText}
           </h2>
