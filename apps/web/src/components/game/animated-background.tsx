@@ -289,7 +289,9 @@ function GridOverlay({
   if (!isVisible) return null;
 
   const spacing = GRID_SPACING_PX[intensity];
-  const animation = prefersReducedMotion ? "none" : "t3-grid-pan 60s linear infinite";
+  const animation = prefersReducedMotion
+    ? "none"
+    : "t3-grid-pan 60s linear infinite";
 
   return (
     <div
@@ -365,7 +367,11 @@ export function AnimatedBackground({
         }}
       />
 
-      <GridOverlay variant={variant} intensity={intensity} isVisible={isVisible} />
+      <GridOverlay
+        variant={variant}
+        intensity={intensity}
+        isVisible={isVisible}
+      />
 
       <div className="relative z-10">{children}</div>
 
@@ -394,13 +400,19 @@ export function AnimatedBackground({
         }
         @keyframes t3-grid-pan {
           0% {
-            background-position: 0 0, 0 0;
+            background-position:
+              0 0,
+              0 0;
           }
           50% {
-            background-position: 50px 50px, 50px 50px;
+            background-position:
+              50px 50px,
+              50px 50px;
           }
           100% {
-            background-position: 0 0, 0 0;
+            background-position:
+              0 0,
+              0 0;
           }
         }
       `}</style>
