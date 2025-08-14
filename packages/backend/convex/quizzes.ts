@@ -7,13 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import {
-  type SystemContext as AgentSystemContext,
-  buildSearchContext,
-  decideNextAction,
-  generateTriviaQuestion,
-} from "../lib/agent";
-import { performWebSearch } from "../lib/serper";
+import { askTriviaAgent } from "../lib/agent";
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -625,98 +619,7 @@ export const generateAiAnswers = internalAction({
   },
   handler: async (ctx, { quizId, roundId, promptText }) => {
     try {
-      // Initialize system context
-      const context: AgentSystemContext = {
-        searchResults: [],
-        stepCount: 0,
-        maxSteps: 10,
-        promptText,
-      };
-
-      // Agent loop
-      while (context.stepCount < context.maxSteps) {
-        context.stepCount++;
-
-        // Determine next action
-        const actionDecision = await decideNextAction({
-          stepCount: context.stepCount,
-          maxSteps: context.maxSteps,
-          searchResults: context.searchResults,
-          promptText: context.promptText,
-        });
-
-        if (actionDecision.action === "google-search") {
-          // Perform Google search
-          if (!actionDecision.searchQuery) {
-            throw new Error(
-              "Search query is required for google-search action"
-            );
-          }
-
-          try {
-            // Use a simple web search API (you'll need to implement this with your preferred search provider)
-            const searchResults = await performWebSearch(
-              actionDecision.searchQuery
-            );
-
-            context.searchResults.push({
-              query: actionDecision.searchQuery,
-              results: searchResults,
-            });
-
-            console.log(
-              `Step ${context.stepCount}: Searched for "${actionDecision.searchQuery}", found ${searchResults.length} results`
-            );
-          } catch (searchError) {
-            console.error("Search failed:", searchError);
-            // Continue with generation if search fails
-            break;
-          }
-        } else if (actionDecision.action === "generate-object") {
-          // Generate trivia question
-          const searchContext = buildSearchContext(context.searchResults);
-          const aiResponse = await generateTriviaQuestion({
-            promptText: context.promptText,
-            searchContext,
-          });
-
-          // Create shuffled options with unique IDs
-          const allOptions = [
-            { id: "correct", text: aiResponse.correct, isCorrect: true },
-            ...aiResponse.distractors.map((text: string, index: number) => ({
-              id: `distractor_${index + 1}`,
-              text,
-              isCorrect: false,
-            })),
-          ];
-
-          // Shuffle options
-          for (let i = allOptions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
-          }
-
-          // Store the generated options in the round
-          await ctx.runMutation(internal.quizzes.advanceToAnswering, {
-            quizId,
-            roundId,
-            aiAnswerOptions: allOptions,
-            question: aiResponse.question,
-          });
-
-          console.log(
-            `Step ${context.stepCount}: Generated trivia question successfully`
-          );
-          return; // Exit the loop successfully
-        }
-      }
-
-      // If we reach here, we've hit max steps without generating - fallback to simple generation
-      console.log("Max steps reached, falling back to simple generation");
-
-      const aiResponse = await generateTriviaQuestion({
-        promptText: context.promptText,
-      });
+      const aiResponse = await askTriviaAgent({ promptText });
 
       // Create shuffled options with unique IDs
       const allOptions = [

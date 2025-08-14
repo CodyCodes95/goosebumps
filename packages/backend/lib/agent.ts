@@ -1,6 +1,7 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 import { model } from "./model";
+import { performWebSearch } from "./serper";
 
 export type WebSearchSnippet = {
   title: string;
@@ -119,4 +120,65 @@ Rules:
   });
 
   return object;
+}
+
+export async function askTriviaAgent(args: {
+  promptText: string;
+  maxSteps?: number;
+}): Promise<z.infer<typeof triviaQuestionSchema>> {
+  const context: SystemContext = {
+    searchResults: [],
+    stepCount: 0,
+    maxSteps: args.maxSteps ?? 10,
+    promptText: args.promptText,
+  };
+
+  while (context.stepCount < context.maxSteps) {
+    context.stepCount++;
+
+    const actionDecision = await decideNextAction({
+      stepCount: context.stepCount,
+      maxSteps: context.maxSteps,
+      searchResults: context.searchResults,
+      promptText: context.promptText,
+    });
+
+    if (actionDecision.action === "google-search") {
+      if (!actionDecision.searchQuery) {
+        throw new Error("Search query is required for google-search action");
+      }
+
+      try {
+        const searchResults = await performWebSearch(
+          actionDecision.searchQuery
+        );
+        context.searchResults.push({
+          query: actionDecision.searchQuery,
+          results: searchResults,
+        });
+        console.log(
+          `Step ${context.stepCount}: Searched for "${actionDecision.searchQuery}", found ${searchResults.length} results`
+        );
+      } catch (searchError) {
+        console.error("Search failed:", searchError);
+        break;
+      }
+    } else if (actionDecision.action === "generate-object") {
+      const searchContext = buildSearchContext(context.searchResults);
+      const aiResponse = await generateTriviaQuestion({
+        promptText: context.promptText,
+        searchContext,
+      });
+      console.log(
+        `Step ${context.stepCount}: Generated trivia question successfully`
+      );
+      return aiResponse;
+    }
+  }
+
+  console.log("Max steps reached, falling back to simple generation");
+  const aiResponse = await generateTriviaQuestion({
+    promptText: context.promptText,
+  });
+  return aiResponse;
 }
