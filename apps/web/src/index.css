@@ -287,6 +287,47 @@ body {
 }
 
 @layer utilities {
+  @keyframes t3-bg-pan {
+    0% {
+      transform: translate3d(-3%, -3%, 0);
+    }
+    50% {
+      transform: translate3d(3%, 3%, 0);
+    }
+    100% {
+      transform: translate3d(-3%, -3%, 0);
+    }
+  }
+
+  @keyframes t3-bg-pan-rev {
+    0% {
+      transform: translate3d(3%, 3%, 0);
+    }
+    50% {
+      transform: translate3d(-3%, -3%, 0);
+    }
+    100% {
+      transform: translate3d(3%, 3%, 0);
+    }
+  }
+
+  @keyframes t3-grid-pan {
+    0% {
+      background-position:
+        0 0,
+        0 0;
+    }
+    50% {
+      background-position:
+        50px 50px,
+        50px 50px;
+    }
+    100% {
+      background-position:
+        0 0,
+        0 0;
+    }
+  }
   /* Game Animations */
   @keyframes fade-in {
     from {

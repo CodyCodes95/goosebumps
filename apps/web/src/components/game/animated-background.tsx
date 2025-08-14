@@ -280,24 +280,21 @@ function GridOverlay({
   intensity?: Intensity;
   isVisible?: boolean;
 }) {
-  const { prefersReducedMotion } = useMotion();
-  const color = useMemo(() => {
-    const colors = getResolvedColors(variant);
-    return colors[0] || resolveCssVar("--primary");
+  const colorVarName = useMemo(() => {
+    const vars = VARIANT_COLOR_VARS[variant] || VARIANT_COLOR_VARS.default;
+    return vars[0] || "--primary";
   }, [variant]);
 
   if (!isVisible) return null;
 
   const spacing = GRID_SPACING_PX[intensity];
-  const animation = prefersReducedMotion
-    ? "none"
-    : "t3-grid-pan 60s linear infinite";
+  const animation = "t3-grid-pan 60s linear infinite";
 
   return (
     <div
       className="absolute inset-0 pointer-events-none will-change-transform"
       style={{
-        color,
+        color: `var(${colorVarName})`,
         opacity: 0.15,
         backgroundImage: `repeating-linear-gradient(0deg, currentColor 0px, currentColor 1px, transparent 1px, transparent ${spacing}px), repeating-linear-gradient(90deg, currentColor 0px, currentColor 1px, transparent 1px, transparent ${spacing}px)`,
         backgroundSize: `${spacing}px ${spacing}px, ${spacing}px ${spacing}px`,
@@ -319,7 +316,6 @@ export function AnimatedBackground({
   children,
 }: AnimatedBackgroundProps) {
   const [isVisible, setIsVisible] = useState(true);
-  const { prefersReducedMotion } = useMotion();
   const config = gradientConfigs[variant];
 
   useEffect(() => {
@@ -337,13 +333,9 @@ export function AnimatedBackground({
           top: "-10%",
           width: "120%",
           height: "120%",
-          background: config.background,
-          transform: prefersReducedMotion
-            ? "translate3d(0,0,0)"
-            : "translate3d(-3%, -3%, 0)",
-          animation: prefersReducedMotion
-            ? "none"
-            : "t3-bg-pan 60s linear infinite",
+          backgroundImage: config.background,
+          transform: "translate3d(-3%, -3%, 0)",
+          animation: "t3-bg-pan 60s linear infinite",
           backgroundSize: "160% 160%",
           pointerEvents: "none",
         }}
@@ -355,13 +347,9 @@ export function AnimatedBackground({
           top: "-10%",
           width: "120%",
           height: "120%",
-          background: config.overlay,
-          transform: prefersReducedMotion
-            ? "translate3d(0,0,0)"
-            : "translate3d(3%, 3%, 0)",
-          animation: prefersReducedMotion
-            ? "none"
-            : "t3-bg-pan-rev 80s linear infinite 10s",
+          backgroundImage: config.overlay,
+          transform: "translate3d(3%, 3%, 0)",
+          animation: "t3-bg-pan-rev 80s linear infinite 10s",
           backgroundSize: "180% 180%",
           pointerEvents: "none",
         }}
@@ -375,47 +363,7 @@ export function AnimatedBackground({
 
       <div className="relative z-10">{children}</div>
 
-      <style jsx global>{`
-        @keyframes t3-bg-pan {
-          0% {
-            transform: translate3d(-3%, -3%, 0);
-          }
-          50% {
-            transform: translate3d(3%, 3%, 0);
-          }
-          100% {
-            transform: translate3d(-3%, -3%, 0);
-          }
-        }
-        @keyframes t3-bg-pan-rev {
-          0% {
-            transform: translate3d(3%, 3%, 0);
-          }
-          50% {
-            transform: translate3d(-3%, -3%, 0);
-          }
-          100% {
-            transform: translate3d(3%, 3%, 0);
-          }
-        }
-        @keyframes t3-grid-pan {
-          0% {
-            background-position:
-              0 0,
-              0 0;
-          }
-          50% {
-            background-position:
-              50px 50px,
-              50px 50px;
-          }
-          100% {
-            background-position:
-              0 0,
-              0 0;
-          }
-        }
-      `}</style>
+      {/* keyframes moved to global CSS */}
     </div>
   );
 }
