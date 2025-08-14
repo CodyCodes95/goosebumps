@@ -246,7 +246,9 @@ export const AnswerGrid = React.memo(function AnswerGrid({
   return (
     <motion.div
       className={cn(
-        "grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mx-auto",
+        // Force 2x2 grid on small screens to fit all answers without scroll
+        // and tighten gaps. Revert to 2 columns on md+.
+        "grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-4xl mx-auto",
         className
       )}
       initial="initial"
@@ -275,6 +277,7 @@ export const AnswerGrid = React.memo(function AnswerGrid({
             isCorrect={option.isCorrect}
             isLocked={isLocked}
             onClick={() => onSelectOption?.(option.id)}
+            className="min-h-[88px] p-4 text-base md:min-h-[120px] md:p-6 md:text-lg"
           />
         </motion.div>
       ))}

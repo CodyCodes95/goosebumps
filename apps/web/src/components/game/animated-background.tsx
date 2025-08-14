@@ -325,7 +325,12 @@ export function AnimatedBackground({
   }, []);
 
   return (
-    <div className={cn("relative min-h-screen overflow-hidden", className)}>
+    <div
+      className={cn(
+        "relative min-h-screen overflow-x-hidden overflow-y-auto",
+        className
+      )}
+    >
       <div
         className="absolute will-change-transform"
         style={{
