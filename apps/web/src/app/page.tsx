@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Twitter, Github } from "lucide-react";
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
         <div className="container max-w-4xl mx-auto text-center">
           <div className="mb-8 animate-fade-in">
             <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent animate-fade-in-up">
-              Interactive Quiz Experience
+              Goosebumps
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in-up [animation-delay:0.2s]">
               Players submit questions, AI generates answers. Real-time
@@ -90,6 +91,31 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <footer className="border-t py-6">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            <span>made by cody</span>
+            <div className="flex items-center gap-2">
+              <a
+                href=""
+                aria-label="Twitter"
+                title="Twitter"
+                className="hover:text-foreground transition-colors"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a
+                href=""
+                aria-label="GitHub"
+                title="GitHub"
+                className="hover:text-foreground transition-colors"
+              >
+                <Github className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
