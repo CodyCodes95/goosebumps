@@ -17,7 +17,8 @@
 			"env": [
 				"CLERK_JWT_ISSUER_DOMAIN",
 				"CLERK_SECRET_KEY",
-				"GOOGLE_GENERATIVE_AI_API_KEY"
+				"GOOGLE_GENERATIVE_AI_API_KEY",
+				"CONVEX_DEPLOY_KEY"
 			]
 		},
 		"lint": {
