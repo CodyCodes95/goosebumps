@@ -19,70 +19,48 @@ body {
 }
 
 :root {
-  /* Game Background - Deep purple gradient base */
-  --background: oklch(0.08 0.08 280);
-  --background-secondary: oklch(0.12 0.08 270);
-  --foreground: oklch(0.98 0.02 280);
-
-  /* Cards with subtle transparency for depth */
-  --card: oklch(0.15 0.06 275);
-  --card-foreground: oklch(0.95 0.02 280);
-  --popover: oklch(0.18 0.06 275);
-  --popover-foreground: oklch(0.92 0.02 280);
-
-  /* Game Colors - Bold and saturated */
-  --primary: oklch(0.8348 0.1302 160.908); /* Your original green */
+  /* Base palette restored from Aug 10, 2025 */
+  --background: oklch(0.9911 0 0);
+  --foreground: oklch(0.2046 0 0);
+  --card: oklch(0.9911 0 0);
+  --card-foreground: oklch(0.2046 0 0);
+  --popover: oklch(0.9911 0 0);
+  --popover-foreground: oklch(0.4386 0 0);
+  --primary: oklch(0.8348 0.1302 160.908);
   --primary-foreground: oklch(0.2626 0.0147 166.4589);
-  --accent: oklch(0.65 0.28 15); /* Hot Pink #FF3D71 */
-  --accent-foreground: oklch(0.98 0.02 15);
-
-  /* Answer Card Colors - Distinct from Kahoot */
-  --answer-star: oklch(0.75 0.25 60); /* Golden Yellow */
-  --answer-star-foreground: oklch(0.15 0.06 60);
-  --answer-bolt: oklch(0.65 0.28 15); /* Hot Pink */
-  --answer-bolt-foreground: oklch(0.98 0.02 15);
-  --answer-heart: oklch(0.68 0.25 340); /* Magenta */
-  --answer-heart-foreground: oklch(0.98 0.02 340);
-  --answer-clover: oklch(0.65 0.25 150); /* Emerald */
-  --answer-clover-foreground: oklch(0.98 0.02 150);
-
-  /* Semantic Colors */
-  --success: oklch(0.65 0.25 150); /* Green #22C55E */
-  --success-foreground: oklch(0.98 0.02 150);
-  --warning: oklch(0.75 0.25 60); /* Amber #F59E0B */
-  --warning-foreground: oklch(0.15 0.06 60);
-  --destructive: oklch(0.58 0.28 25); /* Red */
-  --destructive-foreground: oklch(0.98 0.02 25);
-  --info: oklch(0.68 0.25 200); /* Cyan #06B6D4 */
-  --info-foreground: oklch(0.98 0.02 200);
-
-  /* UI Elements */
-  --secondary: oklch(0.22 0.06 275);
-  --secondary-foreground: oklch(0.88 0.02 280);
-  --muted: oklch(0.25 0.04 275);
-  --muted-foreground: oklch(0.65 0.02 280);
-  --border: oklch(0.28 0.04 275);
-  --input: oklch(0.2 0.06 275);
+  --secondary: oklch(0.994 0 0);
+  --secondary-foreground: oklch(0.2046 0 0);
+  --muted: oklch(0.9461 0 0);
+  --muted-foreground: oklch(0.2435 0 0);
+  --accent: oklch(0.9461 0 0);
+  --accent-foreground: oklch(0.2435 0 0);
+  --destructive: oklch(0.5523 0.1927 32.7272);
+  --destructive-foreground: oklch(0.9934 0.0032 17.2118);
+  --border: oklch(0.9037 0 0);
+  --input: oklch(0.9731 0 0);
   --ring: oklch(0.8348 0.1302 160.908);
+
+  /* Derived additions aligned to restored palette */
+  --background-secondary: var(--muted);
 
   /* Charts */
   --chart-1: oklch(0.8348 0.1302 160.908);
-  --chart-2: oklch(0.65 0.28 15);
-  --chart-3: oklch(0.68 0.25 340);
-  --chart-4: oklch(0.75 0.25 60);
-  --chart-5: oklch(0.65 0.25 150);
+  --chart-2: oklch(0.6231 0.188 259.8145);
+  --chart-3: oklch(0.6056 0.2189 292.7172);
+  --chart-4: oklch(0.7686 0.1647 70.0804);
+  --chart-5: oklch(0.6959 0.1491 162.4796);
 
   /* Sidebar */
-  --sidebar: oklch(0.12 0.08 270);
-  --sidebar-foreground: oklch(0.75 0.02 280);
+  --sidebar: oklch(0.9911 0 0);
+  --sidebar-foreground: oklch(0.5452 0 0);
   --sidebar-primary: oklch(0.8348 0.1302 160.908);
   --sidebar-primary-foreground: oklch(0.2626 0.0147 166.4589);
-  --sidebar-accent: oklch(0.22 0.06 275);
-  --sidebar-accent-foreground: oklch(0.88 0.02 280);
-  --sidebar-border: oklch(0.28 0.04 275);
+  --sidebar-accent: oklch(0.9461 0 0);
+  --sidebar-accent-foreground: oklch(0.2435 0 0);
+  --sidebar-border: oklch(0.9037 0 0);
   --sidebar-ring: oklch(0.8348 0.1302 160.908);
 
-  /* Typography */
+  /* Typography (keep current font variables defined elsewhere) */
   --font-sans: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
@@ -92,7 +70,7 @@ body {
   --radius-lg: 1.5rem;
   --radius-xl: 2rem;
 
-  /* Enhanced shadows for depth */
+  /* Shadows (retain enhanced shadows) */
   --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.12);
   --shadow-xs:
     0px 1px 3px 0px hsl(0 0% 0% / 0.12), 0px 1px 2px 0px hsl(0 0% 0% / 0.08);
@@ -109,10 +87,28 @@ body {
   --shadow-2xl:
     0px 1px 3px 0px hsl(0 0% 0% / 0.25), 0px 25px 50px -12px hsl(0 0% 0% / 0.4);
 
-  /* Game glow effects */
-  --glow-primary: 0px 0px 20px oklch(0.8348 0.1302 160.908 / 0.5);
-  --glow-accent: 0px 0px 20px oklch(0.65 0.28 15 / 0.5);
-  --glow-success: 0px 0px 20px oklch(0.65 0.25 150 / 0.5);
+  /* Semantic Colors (mapped to palette) */
+  --success: var(--chart-5);
+  --success-foreground: var(--background);
+  --warning: var(--chart-4);
+  --warning-foreground: var(--foreground);
+  --info: var(--chart-2);
+  --info-foreground: var(--background);
+
+  /* Answer Card Colors mapped to chart palette */
+  --answer-star: var(--chart-4);
+  --answer-star-foreground: var(--background);
+  --answer-bolt: var(--chart-2);
+  --answer-bolt-foreground: var(--background);
+  --answer-heart: var(--chart-3);
+  --answer-heart-foreground: var(--background);
+  --answer-clover: var(--chart-5);
+  --answer-clover-foreground: var(--background);
+
+  /* Game glow effects derived from theme tokens */
+  --glow-primary: 0px 0px 20px var(--primary);
+  --glow-accent: 0px 0px 20px var(--accent);
+  --glow-success: 0px 0px 20px var(--success);
 
   /* Motion tokens */
   --spring-default: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -130,63 +126,61 @@ body {
 }
 
 .dark {
-  /* Dark mode uses the same game colors - we want consistent vibrant experience */
-  --background: oklch(0.06 0.08 280);
-  --background-secondary: oklch(0.1 0.08 270);
-  --foreground: oklch(0.98 0.02 280);
+  --background: oklch(0.1822 0 0);
+  --foreground: oklch(0.9288 0.0126 255.5078);
+  --card: oklch(0.2046 0 0);
+  --card-foreground: oklch(0.9288 0.0126 255.5078);
+  --popover: oklch(0.2603 0 0);
+  --popover-foreground: oklch(0.7348 0 0);
+  --primary: oklch(0.4365 0.1044 156.7556);
+  --primary-foreground: oklch(0.9213 0.0135 167.1556);
+  --secondary: oklch(0.2603 0 0);
+  --secondary-foreground: oklch(0.9851 0 0);
+  --muted: oklch(0.2393 0 0);
+  --muted-foreground: oklch(0.7122 0 0);
+  --accent: oklch(0.3132 0 0);
+  --accent-foreground: oklch(0.9851 0 0);
+  --destructive: oklch(0.3123 0.0852 29.7877);
+  --destructive-foreground: oklch(0.9368 0.0045 34.3092);
+  --border: oklch(0.2809 0 0);
+  --input: oklch(0.2603 0 0);
+  --ring: oklch(0.8003 0.1821 151.711);
 
-  --card: oklch(0.12 0.06 275);
-  --card-foreground: oklch(0.95 0.02 280);
-  --popover: oklch(0.15 0.06 275);
-  --popover-foreground: oklch(0.92 0.02 280);
+  /* Derived additions aligned to restored palette */
+  --background-secondary: var(--muted);
 
-  /* Keep the same vibrant colors for consistency */
-  --primary: oklch(0.8348 0.1302 160.908);
-  --primary-foreground: oklch(0.2626 0.0147 166.4589);
-  --accent: oklch(0.65 0.28 15);
-  --accent-foreground: oklch(0.98 0.02 15);
+  --chart-1: oklch(0.8003 0.1821 151.711);
+  --chart-2: oklch(0.7137 0.1434 254.624);
+  --chart-3: oklch(0.709 0.1592 293.5412);
+  --chart-4: oklch(0.8369 0.1644 84.4286);
+  --chart-5: oklch(0.7845 0.1325 181.912);
 
-  /* Answer cards remain the same for brand consistency */
-  --answer-star: oklch(0.75 0.25 60);
-  --answer-star-foreground: oklch(0.15 0.06 60);
-  --answer-bolt: oklch(0.65 0.28 15);
-  --answer-bolt-foreground: oklch(0.98 0.02 15);
-  --answer-heart: oklch(0.68 0.25 340);
-  --answer-heart-foreground: oklch(0.98 0.02 340);
-  --answer-clover: oklch(0.65 0.25 150);
-  --answer-clover-foreground: oklch(0.98 0.02 150);
+  --sidebar: oklch(0.1822 0 0);
+  --sidebar-foreground: oklch(0.6301 0 0);
+  --sidebar-primary: oklch(0.4365 0.1044 156.7556);
+  --sidebar-primary-foreground: oklch(0.9213 0.0135 167.1556);
+  --sidebar-accent: oklch(0.3132 0 0);
+  --sidebar-accent-foreground: oklch(0.9851 0 0);
+  --sidebar-border: oklch(0.2809 0 0);
+  --sidebar-ring: oklch(0.8003 0.1821 151.711);
 
-  --success: oklch(0.65 0.25 150);
-  --success-foreground: oklch(0.98 0.02 150);
-  --warning: oklch(0.75 0.25 60);
-  --warning-foreground: oklch(0.15 0.06 60);
-  --destructive: oklch(0.58 0.28 25);
-  --destructive-foreground: oklch(0.98 0.02 25);
-  --info: oklch(0.68 0.25 200);
-  --info-foreground: oklch(0.98 0.02 200);
+  /* Semantic Colors */
+  --success: var(--chart-5);
+  --success-foreground: var(--foreground);
+  --warning: var(--chart-4);
+  --warning-foreground: var(--foreground);
+  --info: var(--chart-2);
+  --info-foreground: var(--foreground);
 
-  --secondary: oklch(0.18 0.06 275);
-  --secondary-foreground: oklch(0.88 0.02 280);
-  --muted: oklch(0.22 0.04 275);
-  --muted-foreground: oklch(0.65 0.02 280);
-  --border: oklch(0.25 0.04 275);
-  --input: oklch(0.18 0.06 275);
-  --ring: oklch(0.8348 0.1302 160.908);
-
-  --chart-1: oklch(0.8348 0.1302 160.908);
-  --chart-2: oklch(0.65 0.28 15);
-  --chart-3: oklch(0.68 0.25 340);
-  --chart-4: oklch(0.75 0.25 60);
-  --chart-5: oklch(0.65 0.25 150);
-
-  --sidebar: oklch(0.1 0.08 270);
-  --sidebar-foreground: oklch(0.75 0.02 280);
-  --sidebar-primary: oklch(0.8348 0.1302 160.908);
-  --sidebar-primary-foreground: oklch(0.2626 0.0147 166.4589);
-  --sidebar-accent: oklch(0.18 0.06 275);
-  --sidebar-accent-foreground: oklch(0.88 0.02 280);
-  --sidebar-border: oklch(0.25 0.04 275);
-  --sidebar-ring: oklch(0.8348 0.1302 160.908);
+  /* Answer Cards */
+  --answer-star: var(--chart-4);
+  --answer-star-foreground: var(--foreground);
+  --answer-bolt: var(--chart-2);
+  --answer-bolt-foreground: var(--foreground);
+  --answer-heart: var(--chart-3);
+  --answer-heart-foreground: var(--foreground);
+  --answer-clover: var(--chart-5);
+  --answer-clover-foreground: var(--foreground);
 }
 
 @theme inline {
