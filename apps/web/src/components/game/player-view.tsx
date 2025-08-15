@@ -78,6 +78,17 @@ function GamePlayerContent({
     quiz._id ? { quizId: quiz._id as Id<"quizzes"> } : "skip"
   );
 
+  // Player breakdown (only when we know myPlayer and quiz)
+  const playerBreakdown = useQuery(
+    api.quizzes.getPlayerBreakdown,
+    quiz._id && myPlayer?._id
+      ? {
+          quizId: quiz._id as Id<"quizzes">,
+          playerId: myPlayer._id as Id<"players">,
+        }
+      : "skip"
+  );
+
   // Memoize countdown callbacks to prevent unnecessary re-renders
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
@@ -239,6 +250,7 @@ function GamePlayerContent({
 
   // At this point, myPlayer is guaranteed to be defined
   const typedMyPlayer = myPlayer; // TypeScript assertion helper
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const nonHostPlayers = players.filter((p) => !p.isHost);
   const isPrompter =
@@ -849,7 +861,7 @@ function GamePlayerContent({
           </p>
         </div>
 
-        {/* Final position */}
+        {/* Your final score */}
         {leaderboard && (
           <div className="game-card p-8 max-w-md mx-auto">
             <h3 className="text-xl font-bold mb-4">Your Final Score</h3>
@@ -865,6 +877,175 @@ function GamePlayerContent({
             </div>
           </div>
         )}
+
+        {/* Full final leaderboard (scrollable) */}
+        {leaderboard && leaderboard.length > 0 && (
+          <div className="game-card p-6 max-w-2xl mx-auto text-left">
+            <h3 className="text-xl font-bold mb-4">Final Leaderboard</h3>
+            <div className="max-h-96 overflow-y-auto pr-2 space-y-2">
+              {leaderboard.map((player) => {
+                const isMe = player._id === typedMyPlayer._id;
+                const position = player.position;
+                return (
+                  <div
+                    key={player._id}
+                    className={cn(
+                      "p-3 rounded-lg border flex items-center gap-4",
+                      isMe
+                        ? "bg-primary/10 border-primary ring-2 ring-primary/20"
+                        : "bg-card border-border",
+                      position <= 3 && "bg-gradient-to-r",
+                      position === 1 && "from-warning/20 to-warning/10",
+                      position === 2 && "from-muted/30 to-muted/20",
+                      position === 3 && "from-accent/20 to-accent/10"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold",
+                        position === 1 && "bg-warning text-warning-foreground",
+                        position === 2 && "bg-muted text-muted-foreground",
+                        position === 3 && "bg-accent text-accent-foreground",
+                        position > 3 && "bg-secondary text-secondary-foreground"
+                      )}
+                    >
+                      {position <= 3
+                        ? position === 1
+                          ? "🥇"
+                          : position === 2
+                            ? "🥈"
+                            : "🥉"
+                        : position}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={cn(
+                          "font-medium truncate",
+                          isMe && "text-primary"
+                        )}
+                      >
+                        {player.name}
+                        {isMe && (
+                          <span className="ml-2 text-primary">(You)</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{player.score}</div>
+                      <div className="text-xs text-muted-foreground">
+                        points
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Breakdown CTA */}
+        <div className="max-w-2xl mx-auto">
+          <div className="game-card p-6 text-left space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold">Your Breakdown</h3>
+              <Button
+                onClick={() => setShowBreakdown((v) => !v)}
+                size="sm"
+                className="game-button"
+              >
+                {showBreakdown ? "Hide" : "View"}
+              </Button>
+            </div>
+            {showBreakdown && (
+              <div className="space-y-4">
+                {playerBreakdown === undefined && (
+                  <div className="text-sm text-muted-foreground">
+                    Loading your results…
+                  </div>
+                )}
+                {playerBreakdown && (
+                  <>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="px-2 py-1 rounded bg-secondary">
+                        Questions: {playerBreakdown.totals.totalQuestions}
+                      </span>
+                      <span className="px-2 py-1 rounded bg-secondary">
+                        Answered: {playerBreakdown.totals.totalAnswered}
+                      </span>
+                      <span className="px-2 py-1 rounded bg-secondary">
+                        Correct: {playerBreakdown.totals.totalCorrect}
+                      </span>
+                    </div>
+                    <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-2">
+                      {playerBreakdown.rounds.map((r) => (
+                        <div
+                          key={r.roundIndex}
+                          className={cn(
+                            "p-4 rounded-lg border",
+                            r.answered
+                              ? r.isCorrect
+                                ? "bg-success/10 border-success/20"
+                                : "bg-destructive/10 border-destructive/20"
+                              : "bg-muted/20 border-muted/30"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                                Round {r.roundIndex + 1}
+                              </p>
+                              <p className="font-semibold truncate">
+                                {r.question || "Question"}
+                              </p>
+                            </div>
+                            <div
+                              className={cn(
+                                "text-xs font-semibold px-2 py-1 rounded",
+                                r.answered
+                                  ? r.isCorrect
+                                    ? "bg-success text-success-foreground"
+                                    : "bg-destructive text-destructive-foreground"
+                                  : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              {r.answered
+                                ? r.isCorrect
+                                  ? "Correct"
+                                  : "Wrong"
+                                : "No Answer"}
+                            </div>
+                          </div>
+                          <div className="mt-2 text-sm grid gap-1">
+                            {r.correctAnswerText && (
+                              <div className="text-success">
+                                Correct: {r.correctAnswerText}
+                              </div>
+                            )}
+                            {r.selectedAnswerText && (
+                              <div className="text-muted-foreground">
+                                Your answer: {r.selectedAnswerText}
+                              </div>
+                            )}
+                            {!r.selectedAnswerText && !r.answered && (
+                              <div className="text-muted-foreground">
+                                You didn't answer
+                              </div>
+                            )}
+                            {r.detailText && (
+                              <div className="text-muted-foreground">
+                                {r.detailText}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

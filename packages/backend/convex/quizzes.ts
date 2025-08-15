@@ -1083,6 +1083,93 @@ export const getLeaderboard = query({
 });
 
 /**
+ * Get a per-round breakdown for a specific player in a quiz
+ * Returns the question, options, player's selected option, and correctness
+ */
+export const getPlayerBreakdown = query({
+  args: {
+    quizId: v.id("quizzes"),
+    playerId: v.id("players"),
+  },
+  handler: async (ctx, { quizId, playerId }) => {
+    // Validate quiz exists
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) return null;
+
+    // Validate player belongs to quiz
+    const player = await ctx.db.get(playerId);
+    if (!player || player.quizId !== quizId) {
+      throw new Error("Player not found in this quiz");
+    }
+
+    // Get all rounds for this quiz ordered by roundIndex
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("byQuizIndex", (q) => q.eq("quizId", quizId))
+      .collect();
+
+    // Sort rounds by index to ensure stable order
+    rounds.sort((a, b) => a.roundIndex - b.roundIndex);
+
+    // For each round, find this player's answer (if any)
+    const breakdown = [] as Array<{
+      roundIndex: number;
+      question: string;
+      detailText?: string;
+      options: Array<{ id: string; text: string; isCorrect: boolean }>;
+      selectedOptionId: string;
+      isCorrect: boolean;
+      answered: boolean;
+      correctOptionId?: string;
+      correctAnswerText?: string;
+      selectedAnswerText?: string;
+    }>;
+
+    for (const round of rounds) {
+      const answer = await ctx.db
+        .query("playerAnswers")
+        .withIndex("byPlayerAndRound", (q) =>
+          q.eq("playerId", playerId).eq("roundId", round._id)
+        )
+        .unique();
+
+      const options = round.aiAnswerOptions || [];
+      const correct = options.find((o) => o.isCorrect);
+      const selected = answer?.selectedOptionId
+        ? options.find((o) => o.id === answer.selectedOptionId)
+        : undefined;
+
+      breakdown.push({
+        roundIndex: round.roundIndex,
+        question: round.promptText || "",
+        detailText: round.aiDetailText,
+        options,
+        selectedOptionId: answer?.selectedOptionId || "",
+        isCorrect: answer?.isCorrect || false,
+        answered: !!answer && answer.selectedOptionId !== "",
+        correctOptionId: correct?.id,
+        correctAnswerText: correct?.text,
+        selectedAnswerText: selected?.text,
+      });
+    }
+
+    const totalQuestions = breakdown.length;
+    const totalAnswered = breakdown.filter((b) => b.answered).length;
+    const totalCorrect = breakdown.filter((b) => b.isCorrect).length;
+
+    return {
+      player: { _id: player._id, name: player.name, score: player.score },
+      totals: {
+        totalQuestions,
+        totalAnswered,
+        totalCorrect,
+      },
+      rounds: breakdown,
+    };
+  },
+});
+
+/**
  * Internal action to check for timeout and auto-lock answers
  * Scheduled when answering phase begins
  */
