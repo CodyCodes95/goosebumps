@@ -1,9 +1,16 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { UserMenu } from "./user-menu";
 
 export default function Header() {
+  const pathname = usePathname();
+  const shouldHideHeader =
+    pathname?.startsWith("/play/") || pathname?.startsWith("/present/");
+
+  if (shouldHideHeader) return null;
+
   return (
     <header className="border-b">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
