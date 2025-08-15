@@ -29,6 +29,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { cn } from "@/lib/utils";
+import { PLAYER_EMOJIS } from "@/lib/emojis";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -259,24 +260,7 @@ function GamePlayerContent({
   const typedMyPlayer = myPlayer; // TypeScript assertion helper
   const [showBreakdown, setShowBreakdown] = useState(false);
 
-  const emojiOptions = [
-    "🎮",
-    "😎",
-    "🤖",
-    "🧠",
-    "🔥",
-    "🌟",
-    "🐱",
-    "🐶",
-    "🦄",
-    "👾",
-    "🍀",
-    "🍕",
-    "⚡",
-    "🎯",
-    "🚀",
-    "🏀",
-  ];
+  const emojiOptions = PLAYER_EMOJIS as readonly string[];
 
   const getPlayerEmoji = (p: any) =>
     p?.emoji && typeof p.emoji === "string" ? p.emoji : "🎮";
@@ -289,7 +273,6 @@ function GamePlayerContent({
         deviceFingerprint,
         emoji,
       });
-
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to update emoji"
@@ -452,7 +435,10 @@ function GamePlayerContent({
                       {getPlayerEmoji(player as any)}
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="p-2">
+                  <DropdownMenuContent
+                    align="center"
+                    className="p-2 max-h-64 overflow-y-auto"
+                  >
                     <div className="grid grid-cols-8 gap-1">
                       {emojiOptions.map((e) => (
                         <button
