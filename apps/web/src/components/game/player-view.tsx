@@ -601,22 +601,73 @@ function GamePlayerContent({
   }
 
   function renderReveal() {
+    const correctOption = answerOptions.find((o) => o.isCorrect);
+
     return (
       <div className="space-y-8">
         {/* Question */}
         <div className="text-center space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold max-w-3xl mx-auto leading-tight">
             {liveData?.currentRound?.promptText}
           </h2>
         </div>
 
-        {/* Answer reveal */}
-        <AnswerGrid
-          options={answerOptions}
-          selectedOptionId={selectedAnswer}
-          isRevealed={true}
-          isLocked={true}
-        />
+        {/* Correct answer only */}
+        {correctOption && (
+          <motion.div
+            className="max-w-2xl mx-auto"
+            variants={gameVariants.cardEntrance}
+            initial="initial"
+            animate="animate"
+          >
+            <div className="game-card p-6 md:p-8 border-success/30 bg-success/10">
+              <div className="flex items-start gap-4">
+                <div className="shrink-0">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-success text-success-foreground flex items-center justify-center text-2xl">
+                    ✓
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm uppercase tracking-wide text-success font-semibold mb-1">
+                    Correct Answer
+                  </p>
+                  <p className="text-lg md:text-xl font-bold leading-snug">
+                    {correctOption.text}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Fun fact / detail */}
+        <motion.div
+          className="max-w-2xl mx-auto"
+          variants={gameVariants.cardEntrance}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 0.2 }}
+        >
+          <div className="game-card p-6 md:p-8">
+            <p className="text-sm uppercase tracking-wide text-accent font-semibold mb-2">
+              Fun fact
+            </p>
+            {liveData?.currentRound?.aiDetailText ? (
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                {liveData.currentRound.aiDetailText}
+              </p>
+            ) : (
+              <div>
+                <div className="animate-shimmer h-4 bg-muted/30 rounded mb-3"></div>
+                <div className="animate-shimmer h-4 bg-muted/30 rounded w-11/12 mb-3"></div>
+                <div className="animate-shimmer h-4 bg-muted/30 rounded w-10/12"></div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Fetching a fun fact...
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* Result message */}
         <motion.div
@@ -624,7 +675,7 @@ function GamePlayerContent({
           variants={gameVariants.cardEntrance}
           initial="initial"
           animate="animate"
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.4 }}
         >
           <div
             className={cn(
