@@ -28,6 +28,7 @@ import {
   Copy,
   ArrowLeft,
   LinkIcon,
+  Trophy,
 } from "lucide-react";
 import type { Id } from "@goosebumps/backend";
 
@@ -486,7 +487,75 @@ export default function QuizDetail({ quizId }: QuizDetailProps) {
             </div>
           </CardContent>
         </Card>
+
+        {specificQuiz.phase === "finished" && (
+          <Card className="md:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                <CardTitle>Results & Leaderboard</CardTitle>
+              </div>
+              <CardDescription>Review the final standings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Leaderboard quizId={quizId} />
+            </CardContent>
+          </Card>
+        )}
       </div>
+    </div>
+  );
+}
+
+type LeaderboardProps = {
+  quizId: Id<"quizzes">;
+};
+
+function Leaderboard({ quizId }: LeaderboardProps) {
+  const leaderboard = useQuery(api.quizzes.getLeaderboard, { quizId });
+
+  if (!leaderboard) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (leaderboard.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">No players participated.</p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {leaderboard.map((player) => (
+        <div
+          key={player._id}
+          className="flex items-center justify-between rounded-lg border bg-card px-4 py-3"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+              {player.position}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-lg">
+                {player.emoji ? player.emoji : "🎮"}
+              </span>
+              <div className="flex flex-col">
+                <span className="font-medium">{player.name}</span>
+                <span className="text-xs text-muted-foreground">Score</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-xl font-bold">{player.score}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
