@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "./ui/input-otp";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import Loader from "./loader";
@@ -45,13 +50,18 @@ export function JoinQuizForm() {
     }
   };
 
-  const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Auto-format to uppercase and limit to 6 characters
-    const value = e.target.value
+  const handleJoinCodeChange = (value: string) => {
+    // Auto-format to uppercase, allow only alphanumeric, limit to 6
+    const sanitized = value
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "")
       .slice(0, 6);
-    setJoinCode(value);
+    setJoinCode(sanitized);
+
+    // Auto-navigate when 6 valid characters are entered
+    if (sanitized.length === 6 && /^[A-Z0-9]{6}$/.test(sanitized)) {
+      router.push(`/join/${sanitized}`);
+    }
   };
 
   return (
@@ -63,18 +73,29 @@ export function JoinQuizForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="joinCode">Quiz Code</Label>
-            <Input
+            <InputOTP
               id="joinCode"
-              type="text"
-              placeholder="ABC123"
+              maxLength={6}
               value={joinCode}
               onChange={handleJoinCodeChange}
-              className="text-center font-mono text-lg tracking-wider transition-all duration-200 focus:scale-[1.02]"
+              containerClassName="justify-center"
+              className="font-mono"
+              pattern="^[A-Z0-9]+$"
               disabled={isSubmitting}
-              maxLength={6}
-              autoComplete="off"
               autoFocus
-            />
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup>
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
             <p className="text-xs text-muted-foreground text-center">
               Enter the 6-character code from your quiz host
             </p>
