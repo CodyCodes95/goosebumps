@@ -792,22 +792,34 @@ export const submitAnswer = mutation({
 
     const now = Date.now();
 
-    // Calculate scoring based on correctness and speed
+    // Calculate scoring based on correctness and time remaining (Kahoot-like)
+    // Max 1000 points when answered instantly, linearly decaying to 0 at deadline
+    const totalTimeMs = quiz.config.secondsPerQuestion * 1000;
+    const timeRemainingMsRaw = quiz.answerDeadlineAt
+      ? quiz.answerDeadlineAt - now
+      : 0;
+    const timeRemainingMs = Math.max(
+      0,
+      Math.min(totalTimeMs, timeRemainingMsRaw)
+    );
+
     let points = 0;
     if (selectedOption.isCorrect) {
-      // Base points for correct answer
-      points = 100;
-
-      // Speed bonus - up to 50% more points based on how quickly answered
-      if (quiz.answerDeadlineAt) {
-        const totalTimeMs = quiz.config.secondsPerQuestion * 1000;
-        const timeRemainingMs = quiz.answerDeadlineAt - now;
-        const speedBonus = Math.floor((timeRemainingMs / totalTimeMs) * 50);
-        points += Math.max(0, speedBonus);
-      }
+      const proportionRemaining =
+        totalTimeMs > 0 ? timeRemainingMs / totalTimeMs : 0;
+      points = Math.max(0, Math.round(1000 * proportionRemaining));
     }
 
     // Record player answer
+    // Compute latency for analytics/tie-breaking
+    const answeringStartMs = quiz.answerDeadlineAt
+      ? quiz.answerDeadlineAt - totalTimeMs
+      : now;
+    const latencyMs = Math.max(
+      0,
+      Math.min(totalTimeMs, now - answeringStartMs)
+    );
+
     await ctx.db.insert("playerAnswers", {
       quizId,
       roundId,
@@ -815,6 +827,7 @@ export const submitAnswer = mutation({
       selectedOptionId,
       isCorrect: selectedOption.isCorrect,
       submittedAt: now,
+      latencyMs,
     });
 
     // Update player score
