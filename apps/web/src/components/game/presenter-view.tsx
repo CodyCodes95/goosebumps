@@ -51,14 +51,16 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
   });
 
   // Get live quiz data (includes players)
-  const liveData = useQuery(api.quizzes.getQuizLive, {
-    joinCode: quiz?.joinCode || "",
-  });
+  const liveData = useQuery(
+    api.quizzes.getQuizLive,
+    quiz ? { joinCode: quiz.joinCode } : "skip"
+  );
 
   // Get leaderboard for scoreboard phase
-  const leaderboard = useQuery(api.quizzes.getLeaderboard, {
-    quizId: quiz?._id as Id<"quizzes">,
-  });
+  const leaderboard = useQuery(
+    api.quizzes.getLeaderboard,
+    quiz ? { quizId: quiz._id as Id<"quizzes"> } : "skip"
+  );
 
   // Mutations
   const startGame = useMutation(api.quizzes.startGame);
