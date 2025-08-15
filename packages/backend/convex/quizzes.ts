@@ -8,6 +8,58 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { askTriviaAgent, askTriviaDetailAgent } from "../lib/agent";
+import type { Id } from "./_generated/dataModel";
+
+// Select a fair next prompter: choose randomly among players with the fewest
+// prior prompts in this quiz. This creates cycles where each player prompts
+// once before any repeats, and adapts if players join/leave mid-game.
+async function pickFairPrompter<T extends { _id: Id<"players"> }>(
+  ctx: any,
+  quizId: Id<"quizzes">,
+  players: T[]
+): Promise<T> {
+  // Default fallback to random if players array is empty or single
+  if (players.length <= 1) {
+    return players[0];
+  }
+
+  // Initialize counts for current players
+  const prompterCounts: Record<string, number> = {};
+  for (const player of players) {
+    prompterCounts[player._id] = 0;
+  }
+
+  // Count how many times each current player has prompted in past rounds
+  const rounds = await ctx.db
+    .query("rounds")
+    .withIndex("byQuizIndex", (q: any) => q.eq("quizId", quizId))
+    .collect();
+
+  for (const round of rounds) {
+    if (
+      round.prompterPlayerId &&
+      prompterCounts[round.prompterPlayerId] !== undefined
+    ) {
+      prompterCounts[round.prompterPlayerId] += 1;
+    }
+  }
+
+  // Find the minimum count among current players
+  let minCount = Number.POSITIVE_INFINITY;
+  for (const player of players) {
+    const count = prompterCounts[player._id] ?? 0;
+    if (count < minCount) minCount = count;
+  }
+
+  // Candidates are players with the fewest prompts so far
+  const candidates = players.filter(
+    (p) => (prompterCounts[p._id] ?? 0) === minCount
+  );
+
+  // Choose randomly among candidates
+  const choice = candidates[Math.floor(Math.random() * candidates.length)];
+  return choice;
+}
 
 /**
  * List all quizzes owned by the current authenticated user
@@ -519,8 +571,8 @@ export const startGame = mutation({
       throw new Error("At least one player must join before starting");
     }
 
-    // Select random prompter from available players
-    const randomPrompter = players[Math.floor(Math.random() * players.length)];
+    // Select fair prompter: randomly among players with fewest prior prompts
+    const fairPrompter = await pickFairPrompter(ctx, quizId, players);
 
     const now = Date.now();
     const promptDeadlineAt = now + quiz.config.secondsForPrompt * 1000;
@@ -529,7 +581,7 @@ export const startGame = mutation({
     await ctx.db.insert("rounds", {
       quizId,
       roundIndex: 0,
-      prompterPlayerId: randomPrompter._id,
+      prompterPlayerId: fairPrompter._id,
     });
 
     // Update quiz phase and deadline
@@ -1013,16 +1065,15 @@ export const advancePhase = mutation({
           throw new Error("No players available for next round");
         }
 
-        // Select random prompter from available players
-        const randomPrompter =
-          players[Math.floor(Math.random() * players.length)];
+        // Select fair prompter: randomly among players with fewest prior prompts
+        const fairPrompter = await pickFairPrompter(ctx, quizId, players);
         const promptDeadlineAt = now + quiz.config.secondsForPrompt * 1000;
 
         // Create next round
         await ctx.db.insert("rounds", {
           quizId,
           roundIndex: nextRoundIndex,
-          prompterPlayerId: randomPrompter._id,
+          prompterPlayerId: fairPrompter._id,
         });
 
         // Update quiz to next round and prompting phase
