@@ -14,9 +14,7 @@ export default async function QuizzesPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">My Quizzes</h1>
-        <p className="text-muted-foreground">
-          Create and manage your interactive quiz experiences
-        </p>
+        <p className="text-muted-foreground">Create and manage your quizzes</p>
       </div>
 
       <QuizDashboard />
