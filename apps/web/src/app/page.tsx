@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Twitter, Github } from "lucide-react";
+import { Twitter, Github, TwitterIcon, GithubIcon } from "lucide-react";
 
 export default function Home() {
   return (
@@ -97,20 +97,20 @@ export default function Home() {
             <span>made by cody</span>
             <div className="flex items-center gap-2">
               <a
-                href=""
+                href="https://x.com/codythatsmee"
                 aria-label="Twitter"
                 title="Twitter"
                 className="hover:text-foreground transition-colors"
               >
-                <Twitter className="h-4 w-4" />
+                <TwitterIcon className="h-4 w-4" />
               </a>
               <a
-                href=""
+                href="https://github.com/CodyCodes95"
                 aria-label="GitHub"
                 title="GitHub"
                 className="hover:text-foreground transition-colors"
               >
-                <Github className="h-4 w-4" />
+                <GithubIcon className="h-4 w-4" />
               </a>
             </div>
           </div>
