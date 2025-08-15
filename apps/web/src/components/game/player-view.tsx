@@ -83,10 +83,6 @@ function GamePlayerContent({
     setShowCountdown(false);
   }, []);
 
-  const handleCountdownTick = useCallback((num: number) => {
-    if (num === 0) toast.success("Go! Choose your answer!");
-  }, []);
-
   const handleConfettiComplete = useCallback(() => {
     setShowConfetti(false);
   }, []);
@@ -274,11 +270,7 @@ function GamePlayerContent({
       {/* Countdown overlay */}
       <AnimatePresence>
         {showCountdown && quiz.phase === "answering" && (
-          <Countdown
-            from={3}
-            onComplete={handleCountdownComplete}
-            onTick={handleCountdownTick}
-          />
+          <Countdown from={3} onComplete={handleCountdownComplete} />
         )}
       </AnimatePresence>
 
@@ -611,7 +603,6 @@ function GamePlayerContent({
       <div className="space-y-8">
         {/* Question */}
         <div className="text-center space-y-4">
-          
           <h2 className="text-2xl md:text-3xl font-bold max-w-3xl mx-auto">
             {liveData?.currentRound?.promptText}
           </h2>
