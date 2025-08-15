@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Settings, Play, Users } from "lucide-react";
+import { Plus, Settings, Play, Users, Trophy } from "lucide-react";
 
 export default function QuizDashboard() {
   const router = useRouter();
@@ -299,8 +299,17 @@ export default function QuizDashboard() {
                       onClick={() => router.push(`/quizzes/${quiz._id}`)}
                       className="transition-all hover:scale-105"
                     >
-                      <Settings className="h-4 w-4 mr-1" />
-                      Edit
+                      {quiz.phase === "finished" ? (
+                        <>
+                          <Trophy className="h-4 w-4 mr-1 text-yellow-500" />
+                          Review
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="h-4 w-4 mr-1" />
+                          Edit
+                        </>
+                      )}
                     </Button>
                     {quiz.phase === "lobby" && (
                       <Button
