@@ -37,6 +37,8 @@ export default defineSchema({
     deviceFingerprint: v.string(), // cookie/localStorage value to limit dupes
     isHost: v.boolean(), // false for normal players
     score: v.number(),
+    // Optional emoji/avatar shown next to player's name (defaults to 🎮)
+    emoji: v.optional(v.string()),
     connectedAt: v.number(),
     lastSeenAt: v.number(),
     kickedAt: v.optional(v.number()),

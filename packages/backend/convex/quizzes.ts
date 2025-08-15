@@ -10,6 +10,35 @@ import { v } from "convex/values";
 import { askTriviaAgent, askTriviaDetailAgent } from "../lib/agent";
 import type { Id } from "./_generated/dataModel";
 
+// Default emoji pool for new players
+const DEFAULT_PLAYER_EMOJIS = [
+  "🎮",
+  "😎",
+  "🤖",
+  "🧠",
+  "🔥",
+  "🌟",
+  "🐱",
+  "🐶",
+  "🦄",
+  "👾",
+  "🍀",
+  "🍕",
+  "⚡",
+  "🎯",
+  "🚀",
+  "🏀",
+  "🐼",
+  "🐸",
+  "🐵",
+  "🐧",
+] as const;
+
+function pickRandomDefaultEmoji(): string {
+  const index = Math.floor(Math.random() * DEFAULT_PLAYER_EMOJIS.length);
+  return DEFAULT_PLAYER_EMOJIS[index];
+}
+
 // Select a fair next prompter: choose randomly among players with the fewest
 // prior prompts in this quiz. This creates cycles where each player prompts
 // once before any repeats, and adapts if players join/leave mid-game.
@@ -215,6 +244,7 @@ export const createQuiz = mutation({
       name: identity.name || "Host",
       deviceFingerprint: "host", // Special fingerprint for host
       isHost: true,
+      emoji: pickRandomDefaultEmoji(),
       score: 0,
       connectedAt: now,
       lastSeenAt: now,
@@ -408,6 +438,7 @@ export const joinQuiz = mutation({
       name: name.trim(),
       deviceFingerprint,
       isHost: false,
+      emoji: pickRandomDefaultEmoji(),
       score: 0,
       connectedAt: now,
       lastSeenAt: now,
@@ -1130,6 +1161,47 @@ export const getLeaderboard = query({
       ...player,
       position: index + 1,
     }));
+  },
+});
+
+/**
+ * Allow a player to update their emoji during the lobby phase
+ */
+export const updatePlayerEmoji = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+    playerId: v.id("players"),
+    deviceFingerprint: v.string(),
+    emoji: v.string(),
+  },
+  handler: async (ctx, { quizId, playerId, deviceFingerprint, emoji }) => {
+    // Validate quiz exists and is in lobby
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz) throw new Error("Quiz not found");
+    if (quiz.phase !== "lobby") {
+      throw new Error("Can only change emoji in the lobby");
+    }
+
+    // Validate player belongs to this quiz and matches fingerprint
+    const player = await ctx.db.get(playerId);
+    if (!player || player.quizId !== quizId) {
+      throw new Error("Player not found in this quiz");
+    }
+    if (player.isHost) {
+      throw new Error("Host emoji is fixed");
+    }
+    if (player.deviceFingerprint !== deviceFingerprint) {
+      throw new Error("Not authorized to update this player");
+    }
+
+    // Basic validation for emoji length (allow 1-4 code units)
+    const trimmed = emoji.trim();
+    if (!trimmed || trimmed.length > 8) {
+      throw new Error("Invalid emoji");
+    }
+
+    await ctx.db.patch(playerId, { emoji: trimmed, lastSeenAt: Date.now() });
+    return { success: true };
   },
 });
 

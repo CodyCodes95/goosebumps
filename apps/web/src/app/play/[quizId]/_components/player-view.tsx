@@ -146,7 +146,7 @@ function LegacyPlayerView({ quizId }: PlayerViewProps) {
         promptText: trimmed,
       });
       setPromptText("");
-      toast.success("Prompt submitted! AI is generating questions...");
+      
     } catch (error) {
       console.error("Error submitting prompt:", error);
       toast.error(

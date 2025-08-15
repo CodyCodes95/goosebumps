@@ -501,10 +501,8 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
                       layout
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-sm font-bold text-primary">
-                            {player.name.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="text-xl">
+                          {(player as any).emoji || "🎮"}
                         </div>
                         <div>
                           <p className="font-medium">{player.name}</p>
@@ -874,7 +872,12 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
                     </div>
 
                     <div className="flex-1">
-                      <p className="font-semibold">{player.name}</p>
+                      <p className="font-semibold">
+                        <span className="mr-2">
+                          {(player as any).emoji || "🎮"}
+                        </span>
+                        {player.name}
+                      </p>
                     </div>
 
                     <div className="text-right">

@@ -29,6 +29,12 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "../ui/dropdown-menu";
 
 type GamePlayerViewProps = {
   quizId: string;
@@ -107,6 +113,7 @@ function GamePlayerContent({
   // Mutations
   const submitPrompt = useMutation(api.quizzes.submitPrompt);
   const submitAnswer = useMutation(api.quizzes.submitAnswer);
+  const updatePlayerEmoji = useMutation(api.quizzes.updatePlayerEmoji);
 
   // Reset answer state when round changes
   useEffect(() => {
@@ -251,6 +258,44 @@ function GamePlayerContent({
   // At this point, myPlayer is guaranteed to be defined
   const typedMyPlayer = myPlayer; // TypeScript assertion helper
   const [showBreakdown, setShowBreakdown] = useState(false);
+
+  const emojiOptions = [
+    "🎮",
+    "😎",
+    "🤖",
+    "🧠",
+    "🔥",
+    "🌟",
+    "🐱",
+    "🐶",
+    "🦄",
+    "👾",
+    "🍀",
+    "🍕",
+    "⚡",
+    "🎯",
+    "🚀",
+    "🏀",
+  ];
+
+  const getPlayerEmoji = (p: any) =>
+    p?.emoji && typeof p.emoji === "string" ? p.emoji : "🎮";
+
+  const handleChangeEmoji = async (emoji: string) => {
+    try {
+      await updatePlayerEmoji({
+        quizId: quiz._id as Id<"quizzes">,
+        playerId: typedMyPlayer._id as Id<"players">,
+        deviceFingerprint,
+        emoji,
+      });
+
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update emoji"
+      );
+    }
+  };
 
   const nonHostPlayers = players.filter((p) => !p.isHost);
   const isPrompter =
@@ -397,7 +442,39 @@ function GamePlayerContent({
               )}
               variants={gameVariants.cardEntrance}
             >
-              <div className="text-2xl mb-2">🎮</div>
+              {player._id === typedMyPlayer._id ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="text-2xl mb-2 hover:scale-110 transition-transform"
+                      aria-label="Change emoji"
+                    >
+                      {getPlayerEmoji(player as any)}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="p-2">
+                    <div className="grid grid-cols-8 gap-1">
+                      {emojiOptions.map((e) => (
+                        <button
+                          key={e}
+                          onClick={() => handleChangeEmoji(e)}
+                          className="h-8 w-8 flex items-center justify-center rounded hover:bg-muted"
+                        >
+                          <span className="text-lg">{e}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <div className="text-[10px] text-muted-foreground text-center pt-1">
+                      Tap to choose your emoji
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="text-2xl mb-2">
+                  {getPlayerEmoji(player as any)}
+                </div>
+              )}
               <p className="font-medium text-sm truncate">{player.name}</p>
               {player._id === typedMyPlayer._id && (
                 <p className="text-xs text-primary">(You)</p>
@@ -803,6 +880,9 @@ function GamePlayerContent({
                         isMe && "text-primary"
                       )}
                     >
+                      <span className="mr-2">
+                        {getPlayerEmoji(player as any)}
+                      </span>
                       {player.name}
                       {isMe && <span className="text-primary ml-2">(You)</span>}
                     </p>
@@ -924,6 +1004,9 @@ function GamePlayerContent({
                           isMe && "text-primary"
                         )}
                       >
+                        <span className="mr-2">
+                          {getPlayerEmoji(player as any)}
+                        </span>
                         {player.name}
                         {isMe && (
                           <span className="ml-2 text-primary">(You)</span>
@@ -942,6 +1025,25 @@ function GamePlayerContent({
             </div>
           </div>
         )}
+
+        {/* Play again / CTA */}
+        <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+          <Button
+            asChild
+            size="lg"
+            className="text-lg px-8 py-6 transition-transform hover:scale-105 hover:shadow-lg"
+          >
+            <a href="/quizzes">Create Quiz</a>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="text-lg px-8 py-6 transition-transform hover:scale-105 hover:shadow-md"
+          >
+            <a href="/join">Join Game</a>
+          </Button>
+        </div>
 
         {/* Breakdown CTA */}
         <div className="max-w-2xl mx-auto">

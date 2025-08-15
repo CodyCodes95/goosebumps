@@ -69,7 +69,6 @@ export function JoinWithCodeForm({ joinCode }: JoinWithCodeFormProps) {
         deviceFingerprint,
       });
 
-      toast.success("Joined quiz successfully!");
 
       // Redirect to the play page
       router.push(`/play/${result.quizId}`);
