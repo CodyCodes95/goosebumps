@@ -506,26 +506,28 @@ function GamePlayerContent({
 
   function renderGenerating() {
     return (
-      <div className="text-center space-y-8">
-        <div className="space-y-4">
-          <Zap className="w-20 h-20 mx-auto text-primary animate-pulse-glow" />
-          <h2 className="text-3xl font-bold">AI is Thinking...</h2>
-          <p className="text-xl text-muted-foreground">
-            Creating awesome answer choices for you!
-          </p>
-        </div>
-
-        <div className="game-card p-8 max-w-md mx-auto">
+      <div className="flex min-h-[70dvh] md:min-h-0 items-center justify-center">
+        <div className="text-center space-y-8">
           <div className="space-y-4">
-            <div className="animate-shimmer h-6 bg-muted/30 rounded"></div>
-            <div className="space-y-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-shimmer h-4 bg-muted/30 rounded"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                ></div>
-              ))}
+            <Zap className="w-20 h-20 mx-auto text-primary animate-pulse-glow" />
+            <h2 className="text-3xl font-bold">AI is Thinking...</h2>
+            <p className="text-xl text-muted-foreground">
+              Creating awesome answer choices for you!
+            </p>
+          </div>
+
+          <div className="game-card p-8 max-w-md mx-auto">
+            <div className="space-y-4">
+              <div className="animate-shimmer h-6 bg-muted/30 rounded"></div>
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="animate-shimmer h-4 bg-muted/30 rounded"
+                    style={{ animationDelay: `${i * 200}ms` }}
+                  ></div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
