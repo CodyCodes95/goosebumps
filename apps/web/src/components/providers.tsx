@@ -18,6 +18,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="dark"
       enableSystem={false}
       disableTransitionOnChange={false}
+      forcedTheme="dark"
     >
       <MotionProvider>
         <AudioProvider>

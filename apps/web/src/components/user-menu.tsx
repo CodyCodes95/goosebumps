@@ -60,7 +60,7 @@ export function UserMenu() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuSub>
+          {/* <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Palette className="h-4 w-4" />
               Theme
@@ -79,7 +79,7 @@ export function UserMenu() {
                 System
               </DropdownMenuItem>
             </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          </DropdownMenuSub> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => openSignIn()}>
             <LogIn className="h-4 w-4" />
