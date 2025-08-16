@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Twitter, Github, TwitterIcon, GithubIcon } from "lucide-react";
+import { TwitterIcon, GithubIcon } from "lucide-react";
+import FaultyTerminal from "../components/FaultyTerminal";
 
 export default function Home() {
   return (
     <main className="flex flex-col min-h-[calc(100vh-4rem)]">
+     
       {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="container max-w-4xl mx-auto text-center">
           <div className="mb-8 animate-fade-in">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent animate-fade-in-up">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white bg-clip-text animate-fade-in-up">
               Goosebumps
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in-up [animation-delay:0.2s]">
@@ -41,7 +43,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* How it Works */}
       <section className="bg-muted/30 py-16">
         <div className="container max-w-4xl mx-auto px-4 text-center">
