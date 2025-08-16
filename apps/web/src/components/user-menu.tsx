@@ -60,7 +60,7 @@ export function UserMenu() {
               Join Game
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+
           {/* <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Palette className="h-4 w-4" />
@@ -144,7 +144,7 @@ export function UserMenu() {
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
         {/* <DropdownMenuSub>
           <DropdownMenuSubTrigger className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
