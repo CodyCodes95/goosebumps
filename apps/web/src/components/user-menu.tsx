@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { dark } from "@clerk/themes";
 
 export function UserMenu() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -81,7 +82,9 @@ export function UserMenu() {
             </DropdownMenuSubContent>
           </DropdownMenuSub> */}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openSignIn()}>
+          <DropdownMenuItem
+            onClick={() => openSignIn({ appearance: { theme: dark } })}
+          >
             <LogIn className="h-4 w-4" />
             Sign In
           </DropdownMenuItem>
@@ -142,7 +145,7 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuSub>
+        {/* <DropdownMenuSub>
           <DropdownMenuSubTrigger className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Theme
@@ -161,7 +164,7 @@ export function UserMenu() {
               System
             </DropdownMenuItem>
           </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        </DropdownMenuSub> */}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => signOut({ redirectUrl: "/" })}
