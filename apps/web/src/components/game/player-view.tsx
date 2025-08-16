@@ -214,7 +214,7 @@ function GamePlayerContent({
         selectedOptionId: optionId,
         deviceFingerprint,
       });
-      toast.success("Answer submitted!");
+      
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to submit answer"
