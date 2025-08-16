@@ -919,32 +919,11 @@ export const submitAnswer = mutation({
       lastSeenAt: now,
     });
 
-    // Check if all players have now answered (inline check)
-    // Get all non-host players
-    const allPlayers = await ctx.db
-      .query("players")
-      .withIndex("byQuiz", (q) => q.eq("quizId", quizId))
-      .filter((q) => q.eq(q.field("isHost"), false))
-      .filter((q) => q.eq(q.field("kickedAt"), undefined))
-      .collect();
-
-    // Get all answers for this round (including the one just submitted)
-    const allAnswers = await ctx.db
-      .query("playerAnswers")
-      .withIndex("byRound", (q) => q.eq("roundId", roundId))
-      .collect();
-
-    // If all players have answered, schedule auto-advance to reveal phase
-    if (allPlayers.length > 0 && allAnswers.length >= allPlayers.length) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.quizzes.autoLockAnswersInternal,
-        {
-          quizId,
-          roundId,
-        }
-      );
-    }
+    // Trigger background check to auto-lock if all players have answered
+    await ctx.scheduler.runAfter(0, internal.quizzes.autoLockIfAllAnswered, {
+      quizId,
+      roundId,
+    });
 
     return {
       success: true,
@@ -1429,6 +1408,37 @@ export const checkAllPlayersAnswered = internalQuery({
       .collect();
 
     return players.length > 0 && answers.length >= players.length;
+  },
+});
+
+/**
+ * Internal action to immediately lock if all players have answered
+ * Triggered opportunistically after each player submission
+ */
+export const autoLockIfAllAnswered = internalAction({
+  args: {
+    quizId: v.id("quizzes"),
+    roundId: v.id("rounds"),
+  },
+  handler: async (ctx, { quizId, roundId }) => {
+    const allAnswered = await ctx.runQuery(
+      internal.quizzes.checkAllPlayersAnswered,
+      {
+        quizId,
+        roundId,
+      }
+    );
+
+    if (!allAnswered) {
+      return { skipped: true };
+    }
+
+    await ctx.runMutation(internal.quizzes.autoLockAnswersInternal, {
+      quizId,
+      roundId,
+    });
+
+    return { locked: true };
   },
 });
 
