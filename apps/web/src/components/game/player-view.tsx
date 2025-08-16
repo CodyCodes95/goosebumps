@@ -189,7 +189,7 @@ function GamePlayerContent({
         roundId: liveData!.currentRound!._id,
         promptText: promptText.trim(),
       });
-      toast.success("Prompt submitted!");
+      
       setPromptText("");
     } catch (error) {
       toast.error(
@@ -228,7 +228,7 @@ function GamePlayerContent({
 
   if (!myPlayer) {
     return (
-      <AnimatedBackground variant="lobby" intensity="medium">
+      // <AnimatedBackground variant="lobby" intensity="medium">
         <div className="game-screen flex items-center justify-center">
           <motion.div
             className="text-center space-y-6 max-w-md mx-auto game-container"
@@ -252,7 +252,7 @@ function GamePlayerContent({
             </Button>
           </motion.div>
         </div>
-      </AnimatedBackground>
+      // </AnimatedBackground>
     );
   }
 

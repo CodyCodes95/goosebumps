@@ -153,11 +153,11 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
 
   if (quiz === undefined || liveData === undefined) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <LoaderContainer />
-        </div>
-      </AnimatedBackground>
+      // <AnimatedBackground variant="default" intensity="low">
+      <div className="game-screen flex items-center justify-center">
+        <LoaderContainer />
+      </div>
+      // </AnimatedBackground>
     );
   }
 
@@ -208,7 +208,6 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
     setIsStarting(true);
     try {
       await startGame({ quizId: quiz._id });
-      toast.success("Game started!");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to start game"
