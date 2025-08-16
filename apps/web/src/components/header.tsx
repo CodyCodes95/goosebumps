@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { UserMenu } from "./user-menu";
 
 export default function Header() {
-  const pathname = usePathname();
-  const shouldHideHeader =
-    pathname?.startsWith("/play/") || pathname?.startsWith("/present/");
+  // const pathname = usePathname();
+  // const shouldHideHeader =
+  //   pathname?.startsWith("/play/") || pathname?.startsWith("/present/");
 
-  if (shouldHideHeader) return null;
+  // if (shouldHideHeader) return null;
 
   return (
     <header className="border-b z-1">

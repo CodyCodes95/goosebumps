@@ -5,7 +5,7 @@ import Providers from "@/components/providers";
 import Header from "@/components/header";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { AnimatedBackground } from "@/components/game/animated-background";
+import RouteBackground from "@/components/route-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,12 +56,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <AnimatedBackground variant="default" intensity="low">
+          <RouteBackground>
             <div className="grid grid-rows-[auto_1fr] h-svh">
               <Header />
               {children}
             </div>
-          </AnimatedBackground>
+          </RouteBackground>
           <Analytics />
           <SpeedInsights />
         </Providers>

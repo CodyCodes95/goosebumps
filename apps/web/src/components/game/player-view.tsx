@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 // Game components
-import { AnimatedBackground, ConfettiExplosion } from "./animated-background";
+import { ConfettiExplosion } from "./animated-background";
 import { AnswerGrid, type AnswerOption } from "./answer-card";
 import { Countdown, TimerCountdown, PhaseProgress } from "./countdown";
 import { useGameTransition, gameVariants } from "../motion-provider";
@@ -214,7 +214,6 @@ function GamePlayerContent({
         selectedOptionId: optionId,
         deviceFingerprint,
       });
-      
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to submit answer"
@@ -228,31 +227,27 @@ function GamePlayerContent({
 
   if (!myPlayer) {
     return (
-      <AnimatedBackground variant="lobby" intensity="medium">
-        <div className="game-screen flex items-center justify-center">
-          <motion.div
-            className="text-center space-y-6 max-w-md mx-auto game-container"
-            variants={gameVariants.pageTransition}
-            initial="initial"
-            animate="animate"
-            transition={transition}
-          >
-            <div className="text-8xl animate-bounce-subtle">🎮</div>
-            <h2 className="text-3xl font-bold text-foreground">
-              Join the Game!
-            </h2>
-            <p className="text-muted-foreground">
-              You haven't joined this quiz yet. Click below to jump in!
-            </p>
-            <Button asChild size="lg" className="game-button text-lg px-8 py-4">
-              <a href={`/join/${quiz.joinCode}`}>
-                <Users className="w-5 h-5 mr-2" />
-                Join Quiz
-              </a>
-            </Button>
-          </motion.div>
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <motion.div
+          className="text-center space-y-6 max-w-md mx-auto game-container"
+          variants={gameVariants.pageTransition}
+          initial="initial"
+          animate="animate"
+          transition={transition}
+        >
+          <div className="text-8xl animate-bounce-subtle">🎮</div>
+          <h2 className="text-3xl font-bold text-foreground">Join the Game!</h2>
+          <p className="text-muted-foreground">
+            You haven't joined this quiz yet. Click below to jump in!
+          </p>
+          <Button asChild size="lg" className="game-button text-lg px-8 py-4">
+            <a href={`/join/${quiz.joinCode}`}>
+              <Users className="w-5 h-5 mr-2" />
+              Join Quiz
+            </a>
+          </Button>
+        </motion.div>
+      </div>
     );
   }
 
@@ -305,8 +300,25 @@ function GamePlayerContent({
     }
   };
 
+  const getBackgroundIntensity = (): "low" | "medium" | "high" => {
+    switch (quiz.phase) {
+      case "lobby":
+        return "medium";
+      case "prompting":
+      case "generating":
+        return "medium";
+      case "answering":
+      case "reveal":
+        return "high";
+      case "scoreboard":
+      case "finished":
+      default:
+        return "medium";
+    }
+  };
+
   return (
-    <AnimatedBackground variant={getBackgroundVariant()} intensity="medium">
+    <>
       {/* Countdown overlay */}
       <AnimatePresence>
         {showCountdown && quiz.phase === "answering" && (
@@ -369,7 +381,7 @@ function GamePlayerContent({
           </AnimatePresence>
         </div>
       </div>
-    </AnimatedBackground>
+    </>
   );
 
   function renderPhaseContent() {
@@ -1174,46 +1186,38 @@ export function GamePlayerView({ quizId }: GamePlayerViewProps) {
 
   if (quiz === undefined || liveData === undefined) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <LoaderContainer />
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <LoaderContainer />
+      </div>
     );
   }
 
   if (!quiz) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <motion.div
-            className="text-center space-y-4"
-            variants={gameVariants.pageTransition}
-            initial="initial"
-            animate="animate"
-            transition={useGameTransition("default")}
-          >
-            <div className="text-6xl">🚫</div>
-            <h2 className="text-2xl font-bold text-foreground">
-              Quiz Not Found
-            </h2>
-            <p className="text-muted-foreground">
-              This quiz doesn't exist or has been deleted.
-            </p>
-          </motion.div>
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <motion.div
+          className="text-center space-y-4"
+          variants={gameVariants.pageTransition}
+          initial="initial"
+          animate="animate"
+          transition={useGameTransition("default")}
+        >
+          <div className="text-6xl">🚫</div>
+          <h2 className="text-2xl font-bold text-foreground">Quiz Not Found</h2>
+          <p className="text-muted-foreground">
+            This quiz doesn't exist or has been deleted.
+          </p>
+        </motion.div>
+      </div>
     );
   }
 
   // Only render the main content when we have both quiz and liveData
   if (!liveData) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <LoaderContainer />
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <LoaderContainer />
+      </div>
     );
   }
 

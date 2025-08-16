@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 // Game components
-import { AnimatedBackground, ConfettiExplosion } from "./animated-background";
+import { ConfettiExplosion } from "./animated-background";
 import { AnswerGrid, type AnswerOption } from "./answer-card";
 import { TimerCountdown, PhaseProgress } from "./countdown";
 import { useGameTransition, gameVariants } from "../motion-provider";
@@ -153,35 +153,29 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
 
   if (quiz === undefined || liveData === undefined) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <LoaderContainer />
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <LoaderContainer />
+      </div>
     );
   }
 
   if (!quiz) {
     return (
-      <AnimatedBackground variant="default" intensity="low">
-        <div className="game-screen flex items-center justify-center">
-          <motion.div
-            className="text-center space-y-4"
-            variants={gameVariants.pageTransition}
-            initial="initial"
-            animate="animate"
-            transition={transition}
-          >
-            <div className="text-6xl">🚫</div>
-            <h2 className="text-2xl font-bold text-foreground">
-              Quiz Not Found
-            </h2>
-            <p className="text-muted-foreground">
-              This quiz doesn't exist or has been deleted.
-            </p>
-          </motion.div>
-        </div>
-      </AnimatedBackground>
+      <div className="game-screen flex items-center justify-center">
+        <motion.div
+          className="text-center space-y-4"
+          variants={gameVariants.pageTransition}
+          initial="initial"
+          animate="animate"
+          transition={transition}
+        >
+          <div className="text-6xl">🚫</div>
+          <h2 className="text-2xl font-bold text-foreground">Quiz Not Found</h2>
+          <p className="text-muted-foreground">
+            This quiz doesn't exist or has been deleted.
+          </p>
+        </motion.div>
+      </div>
     );
   }
 
@@ -382,7 +376,7 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
   const PhaseIcon = phaseInfo.icon;
 
   return (
-    <AnimatedBackground variant={phaseInfo.bgVariant} intensity="low">
+    <>
       {/* Confetti celebration */}
       <ConfettiExplosion
         isActive={showConfetti}
@@ -591,7 +585,7 @@ export function GamePresenterView({ quizId }: GamePresenterViewProps) {
           </div>
         </div>
       </div>
-    </AnimatedBackground>
+    </>
   );
 
   function renderPhaseContent() {

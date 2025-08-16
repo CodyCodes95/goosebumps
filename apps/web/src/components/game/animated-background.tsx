@@ -139,8 +139,15 @@ function CanvasParticles({
     const colors = getResolvedColors(variant);
     const count = targetCount;
 
+    // Slightly increase energy with higher intensity and non-default variants
+    const intensitySpeedMultiplier =
+      intensity === "high" ? 1.35 : intensity === "medium" ? 1.15 : 1.0;
+    const variantEnergyBoost = variant !== "default" ? 1.1 : 1.0;
+    const speedScale = intensitySpeedMultiplier * variantEnergyBoost;
+
     const arr: Particle[] = Array.from({ length: count }, () => {
-      const speed = 0.15 + Math.random() * 0.6; // px/ms
+      const baseSpeed = 0.18 + Math.random() * 0.62; // px/ms
+      const speed = baseSpeed * speedScale;
       const dir = Math.random() * Math.PI * 2;
       return {
         x: Math.random() * w,
@@ -214,9 +221,19 @@ function CanvasParticles({
 
         p.x += p.vx * dt;
         p.y += p.vy * dt;
-        p.pulse += 0.002 * dt;
+        const pulseSpeed =
+          intensity === "high"
+            ? 0.0026
+            : intensity === "medium"
+              ? 0.0022
+              : 0.002;
+        p.pulse += pulseSpeed * dt;
 
-        const drift = 0.0006 * dt;
+        const baseDrift = 0.0006;
+        const driftMultiplier =
+          intensity === "high" ? 1.4 : intensity === "medium" ? 1.2 : 1.0;
+        const variantDriftBoost = variant !== "default" ? 1.1 : 1.0;
+        const drift = baseDrift * driftMultiplier * variantDriftBoost * dt;
         p.vx += (Math.random() - 0.5) * drift;
         p.vy += (Math.random() - 0.5) * drift;
 
@@ -288,7 +305,9 @@ function GridOverlay({
   if (!isVisible) return null;
 
   const spacing = GRID_SPACING_PX[intensity];
-  const animation = "t3-grid-pan 60s linear infinite";
+  const gridDuration =
+    intensity === "high" ? 36 : intensity === "medium" ? 48 : 60;
+  const animation = `t3-grid-pan ${gridDuration}s linear infinite`;
 
   return (
     <div
@@ -340,7 +359,7 @@ export function AnimatedBackground({
           height: "120%",
           backgroundImage: config.background,
           transform: "translate3d(-3%, -3%, 0)",
-          animation: "t3-bg-pan 60s linear infinite",
+          animation: `t3-bg-pan ${intensity === "high" ? 36 : intensity === "medium" ? 48 : 60}s linear infinite`,
           backgroundSize: "160% 160%",
           pointerEvents: "none",
         }}
@@ -354,7 +373,7 @@ export function AnimatedBackground({
           height: "120%",
           backgroundImage: config.overlay,
           transform: "translate3d(3%, 3%, 0)",
-          animation: "t3-bg-pan-rev 80s linear infinite 10s",
+          animation: `t3-bg-pan-rev ${intensity === "high" ? 52 : intensity === "medium" ? 64 : 80}s linear infinite 10s`,
           backgroundSize: "180% 180%",
           pointerEvents: "none",
         }}
