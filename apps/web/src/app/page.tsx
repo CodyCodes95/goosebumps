@@ -5,7 +5,7 @@ import FaultyTerminal from "../components/FaultyTerminal";
 
 export default function Home() {
   return (
-    <main className="flex flex-col min-h-[calc(100vh-4rem)]">
+    <main className="flex flex-col">
       {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="container max-w-4xl mx-auto text-center">

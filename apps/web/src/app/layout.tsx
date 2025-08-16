@@ -57,7 +57,7 @@ export default function RootLayout({
       >
         <Providers>
           <RouteBackground>
-            <div className="grid grid-rows-[auto_1fr] h-svh">
+            <div className="grid grid-rows-[auto_1fr] min-h-svh">
               <Header />
               {children}
             </div>

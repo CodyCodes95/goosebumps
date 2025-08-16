@@ -346,7 +346,7 @@ export function AnimatedBackground({
   return (
     <div
       className={cn(
-        "relative min-h-screen overflow-x-hidden overflow-y-auto",
+        "relative h-full overflow-x-hidden overflow-y-hidden",
         className
       )}
     >
