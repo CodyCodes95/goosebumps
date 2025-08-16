@@ -12,7 +12,7 @@ export default function Header() {
   if (shouldHideHeader) return null;
 
   return (
-    <header className="border-b">
+    <header className="border-b z-1">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold">
           Goosebumps
