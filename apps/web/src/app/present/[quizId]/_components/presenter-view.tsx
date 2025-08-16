@@ -109,7 +109,6 @@ function LegacyPresenterView({ quizId }: PresenterViewProps) {
     setIsStarting(true);
     try {
       await startGame({ quizId: quiz._id });
-      toast.success("Game started!");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to start game"
